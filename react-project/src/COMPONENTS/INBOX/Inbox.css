@@ -1,0 +1,50 @@
+.background__container__inbox {
+  background: url(../../assets/vita-vilcina-KtOid0FLjqU-unsplash.jpg);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  width: 100%;
+  min-height: 100vh;
+  height: auto;
+  position: relative;
+}
+
+.inbox__title{
+  color: white;
+  padding: 10px 20px;
+  background-color: rgba(0,0,0,0.4);
+  width: 80%;
+  text-align: center;
+}
+.stack__container{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card__container{
+  width: 80%;
+  margin-top: 150px;
+  padding: 10px;
+}
+.card__content{
+  background-color: rgba(241,243,244,255);
+}
+.card__actions{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: rgba(241,243,244,255);
+}
+.message__input{
+  width: 70%;
+}
+
+@media screen and (max-width:320px) {
+  .css-1mav4ft-MuiCardActions-root>:not(style)~:not(style) {
+    margin-left: 0 !important;
+    font-size: 10px !important;
+    width: 90% !important;
+  }
+  
+}
+

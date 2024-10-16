@@ -1,0 +1,299 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Times New Roman", Times, serif;
+}
+body {
+  height: 100vh;
+}
+.formSection__responsive {
+  display: none;
+}
+
+.background__division {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+/* Left Side */
+.image__section {
+  background: url("../../assets/jenna-he-u-hQlgjrJCk-unsplash.jpg");
+  width: 50%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  color: wheat;
+}
+
+.hero__title {
+  margin: 90px 0 0 50px;
+}
+
+.hero__paragraph {
+  margin-left: 50px;
+  font-weight: 100;
+  font-size: large;
+}
+
+/* Right Side */
+.form__section {
+  width: 50%;
+  height: 100%;
+  padding: 1.4% 5% 0.5% 5%;
+  background: linear-gradient(
+    to top,
+    rgba(183, 183, 183, 255) 15%,
+    rgba(244, 244, 244, 255) 55%
+  );
+}
+.loginForm__section {
+  padding: 5% 5%;
+}
+.form__details {
+  width: 100%;
+}
+
+.logo__section {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.login__logo {
+  margin-bottom: 40px;
+}
+
+.bxs-home-heart {
+  font-size: 30px;
+}
+
+.form__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.company__title {
+  font-family: "Baskervville SC";
+  font-weight: 400;
+  font-style: normal;
+  font-size: 26px;
+}
+.form__title {
+  font-size: 35px;
+}
+
+.inputs__side {
+  width: 97%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input {
+  max-width: 100%;
+}
+
+.remember__forgot {
+  display: flex;
+  margin-top: 10px;
+  justify-content: space-between;
+}
+
+.login__remember__forgot {
+  margin-bottom: 20px;
+}
+.checkbox__text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  /* margin-left: 10px; */
+  margin-top: -9px;
+  margin-bottom: 0;
+}
+
+.checkbox {
+  width: 10px;
+}
+
+.separator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* padding: 16px 0;  */
+}
+
+.line {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background-color: rgb(162, 162, 162);
+}
+
+.text {
+  position: relative;
+  background-color: rgba(208, 208, 208, 255);
+  padding: 0 8px;
+  color: black;
+  font-size: 1.25rem;
+  margin-top: 10px;
+}
+
+.register__separator__text {
+  background-color: rgba(189, 189, 189, 255);
+}
+
+.icon {
+  height: 24px;
+  width: 24px;
+}
+
+.icon-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  background-color: white;
+  border: 1px solid rgb(109, 109, 109);
+  border-radius: 8px;
+  font-weight: 100;
+  color: #060606;
+  transition: background-color 0.5s ease, color 1s ease;
+}
+
+.icon-container:hover {
+  background-color: rgb(220, 220, 220);
+  color: black;
+  transition-delay: 0.1s;
+}
+
+.navigate {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.no__account {
+  margin-bottom: 0;
+}
+
+.login__noAccount {
+  margin-top: 40px;
+}
+
+.login__button:hover {
+  background-color: pink;
+}
+
+.forgot__password {
+  cursor: pointer;
+  margin-bottom: 0;
+  text-decoration: none;
+  border: none;
+  color: #0d6efd;
+}
+
+.navigate__button:hover {
+  color: rgb(86, 86, 86);
+}
+
+.form__title {
+  color: black;
+  text-align: center;
+}
+
+.forgot__password:hover {
+  color: rgb(86, 86, 86);
+  text-decoration: none;
+}
+
+.navigate__button {
+  text-decoration: none;
+}
+
+@media screen and (max-width: 1246px) {
+  .image__section {
+    height: auto;
+  }
+}
+
+@media screen and (max-width: 650px) {
+  .form__section {
+    display: none;
+  }
+  .image__section {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .hero__paragraph {
+    display: none;
+  }
+  .hero__title {
+    display: none;
+  }
+
+  .formSection__responsive {
+    display: flex;
+    background: linear-gradient(
+      to top,
+      rgba(183, 183, 183, 255) 15%,
+      rgba(244, 244, 244, 255) 55%
+    );
+    border-radius: 20px;
+    width: 60%;
+    padding: 20px;
+    justify-content: center;
+  }
+  .no__account {
+    color: black;
+  }
+
+  .checkbox__text {
+    color: black;
+  }
+}
+
+@media screen and (max-width: 510px) {
+  .formSection__responsive {
+    width: 90%;
+  }
+  .inputs__side {
+    width: 350px;
+  }
+}
+
+@media screen and (max-width: 465px) {
+  .inputs__side {
+    width: 300px;
+  }
+}
+
+@media screen and (max-width: 350px) {
+  .inputs__side {
+    width: 100%;
+  }
+
+  .login__noAccount {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .login__remember__forgot {
+    font-size: 12px;
+  }
+  .forgot__password {
+    margin-top: 3px;
+  }
+}

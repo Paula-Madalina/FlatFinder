@@ -1,0 +1,102 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    z-index: 999;
+    font-family:'Times New Roman', Times, serif;
+}
+.header__logo__and__greetings {
+    color: rgb(255, 255, 255);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+}
+
+.greetings__users {
+  font-family: "Cormorant Upright", serif;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 22px;
+  
+  
+}
+
+.logo__content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.navbar__container {
+    background: linear-gradient(rgba(49, 49, 49, 0.9), rgba(0,0,0,0.5));
+    color:wheat;
+    border-bottom: 1px solid gray ;
+}
+
+.navigation__buttons {
+    color: rgb(255, 255, 255);
+    font-family: "Playfair Display", serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-grow: 1;
+    gap: 20px;
+    
+}
+
+
+.navbar__home__button:hover {
+    color: rgb(165, 100, 225);
+   
+}
+
+.navbar__inbox__button:hover {
+  color: rgb(165, 100, 225);
+}
+.navbar__allUsers__button:hover {
+  color: rgb(165, 100, 225);
+}
+.navbar__profile__button:hover {
+  color: rgb(165, 100, 225);
+}
+
+@keyframes colorFade {
+    0% {
+      color: #ff6ec4;
+    }
+    25% {
+      color: #31a2ac;
+    }
+    50% {
+      color: #ffdd57;
+    }
+    75% {
+      color: #3ad7f2;
+    }
+    100% {
+      color: #ff914d;
+    }
+  }
+  
+  .color-fade {
+    animation: colorFade 16s ease-in-out infinite;
+  }
+  
+  @media screen and (max-width:610px) {
+    .navigation__buttons {
+      display: none;
+    }
+    
+  }
+
+  @media screen and (max-width:400px) {
+    .logo__content {
+      display: none;
+    }
+    .greetings__users {
+      font-size: 15px;
+    }
+  }

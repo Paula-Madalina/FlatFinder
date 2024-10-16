@@ -1,0 +1,70 @@
+.backgroud__container {
+    background: url(../../assets/vita-vilcina-KtOid0FLjqU-unsplash.jpg);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0); 
+    background-blend-mode: darken;
+}
+
+
+.header-style-allUsers {
+    font-weight: bold; 
+    font-size: 17px;   
+    color: black;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: rgba(220,222,224,255);
+
+  }
+  
+  .header-style-table {
+    color:black;
+  }
+
+  .cell-style-allUsers {
+    font-size: 16px;
+    color: #000000; 
+    background-color: rgba(241,243,244,255);
+  }
+  
+
+.MuiDataGrid-footerContainer {
+  color: rgb(0, 18, 92);
+  font-size: 16px;
+
+}
+
+.MuiTablePagination-displayedRows {
+  margin-top: 15px;
+  color: rgb(0, 18, 92);
+  font-size: 20px;
+
+
+}
+
+.MuiTablePagination-actions {
+  color: rgb(0, 18, 92) ;
+
+}
+
+.action__icon {
+    cursor: pointer;
+    color: white;
+}
+
+
+.hero__table__title {
+    padding: 10px 20px;
+    color: white;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.5);
+
+}
+
+.view__icon__allusers {
+  cursor: pointer;
+  color: #208f20;
+}

@@ -1,0 +1,71 @@
+.delete__accout__button {
+    margin-top: 30px !important;
+    color: white !important;
+    border: 1px solid black !important;
+    background-color: red !important;
+    font-size: 14px !important;
+    font-family: inherit !important;
+    margin-left: 20px !important;
+  }
+
+  .profile__hero__container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 50px;
+    background-color: rgb(220, 222, 224, 255);
+    border-radius:50px;
+    color: rgb(0, 0, 0);
+    padding: 20px;
+    margin: 60px auto !important;
+  }
+
+  .update__profile__button {
+    margin-top: 30px !important;
+    color: white !important;
+    border:1px solid rgb(52, 28, 28) !important;
+    background-color: blueviolet !important;
+    font-size: 14px !important;
+    font-family: inherit !important;
+  }
+  
+  @media screen and (max-width: 1045px) {
+    .delete__accout__button {
+      margin-top: 5px !important;
+    }
+
+    .update__profile__button {
+        margin-top: 5px !important;
+        margin-right: 5px !important;
+
+        
+      }
+  }
+  
+  @media screen and (max-width: 627px) {
+    .delete__accout__button {
+      margin-left: 0px !important;
+    }
+
+   
+  }
+
+  @media screen and (max-width: 480px) {
+    .css-qscxtw-MuiTypography-root{
+      font-size: 15px !important;
+    }
+
+    .delete__accout__button {
+      margin-left: 0px !important;
+      padding: 5px 4px !important;
+    }
+    .css-1dku0el-MuiSvgIcon-root {
+      display: none !important;
+    }
+    .css-1ol58f9-MuiContainer-root {
+      padding: 0 !important;
+    }
+  }
+
+  

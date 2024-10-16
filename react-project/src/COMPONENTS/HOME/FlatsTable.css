@@ -1,0 +1,46 @@
+.custom__class .MuiDataGrid-row{
+  border-bottom: 1px solid #c3c4c4;
+  border-top: 1px solid #c3c4c4;
+  font-size: 16px;
+}
+.custom__class .MuiDataGrid-cell{
+  border-bottom: 1px solid #c3c4c4;
+
+}
+.custom__class .MuiDataGrid-columnHeader{
+  background-color: rgb(220, 222, 224, 255);
+  font-size: 18px;
+}
+
+.custom__class .MuiDataGrid-footerContainer{
+  color: white;
+  font-size: 16px;
+}
+.custom__class  {
+  overflow: clip;
+  background-color: rgba(241,243,244,255);
+}
+
+/* FlatsTable.css */
+@media (max-width: 768px) {
+  .MuiDataGrid-root {
+    font-size: 0.75rem; 
+  }
+
+  .MuiDataGrid-columnSeparator {
+    display: none; 
+  }
+
+  .MuiDataGrid-cell {
+    padding: 8px; 
+  }
+
+  .MuiDataGrid-footerContainer {
+    display: none; 
+  }
+
+  .custom__class {
+    width: 100% !important;
+    overflow-x: auto; 
+  }
+}
