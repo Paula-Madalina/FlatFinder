@@ -216,7 +216,7 @@ function UsersProfile() {
                   variant="h6"
                   sx={{ fontFamily: "inherit" }}
                 >
-                  Is admin: {userData.isAdmin}
+                  Role:{userData.isAdmin ? 'Admin' : 'User'}
                 </Typography>
               </div>
 
