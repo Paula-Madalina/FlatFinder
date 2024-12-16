@@ -8,6 +8,7 @@ import { db } from '../../firebase';
 import { IconButton, Paper } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
+import axios from 'axios';
 
 function AllUsers() {
     const [users, setUsers] = useState([]);
@@ -15,18 +16,21 @@ function AllUsers() {
 
     useEffect(() => {
         const fetchUsers = async () => {
-            const usersCollection = collection(db, "users");
-            const userSnapShot = await getDocs(usersCollection);
-            const usersList = await Promise.all(userSnapShot.docs.map(async (doc) => {
-                const userData = doc.data();
-                const flatsCollection = collection(db, "flats");
-                const flatsQuery = query(flatsCollection, where("userUid", "==", doc.id));
-                const flatsSnapshot = await getDocs(flatsQuery);
-                const flatsCount = flatsSnapshot.size;
+            try {
+                const token = localStorage.getItem("token");
+                if(!token) {
+                    throw new Error("NO TOKEN FOUND")
+                }
 
-                return { id: doc.id, ...userData, flatsCount };
-            }));
-            setUsers(usersList);
+                const response = await axios.get('http://localhost:3000/users', {
+                    headers: {
+                        Authorization: `Bearer ${token}` 
+                    }
+                });
+                setUsers(response.data); // Presupunând că răspunsul conține lista de utilizatori
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
         };
         fetchUsers();
     }, []);
@@ -35,14 +39,14 @@ function AllUsers() {
       { field: 'fullName', headerName: 'Name', flex: 0.2, minWidth: 120, headerClassName: 'header-style-allUsers', cellClassName: 'cell-style-allUsers' },
       { field: 'email', headerName: 'Email', flex: 0.2, minWidth: 150, headerClassName: 'header-style-allUsers', cellClassName: 'cell-style-allUsers' },
       { field: 'flatsCount', headerName: 'Flats', flex: 0.1, minWidth: 70, headerClassName: 'header-style-allUsers', cellClassName: 'cell-style-allUsers' },
-      { field: 'role', headerName: 'Role', flex: 0.1, minWidth: 90, headerClassName: 'header-style-allUsers', cellClassName: 'cell-style-allUsers' },
+      { field: 'isAdmin', headerName: 'Admin', flex: 0.1, minWidth: 90, headerClassName: 'header-style-allUsers', cellClassName: 'cell-style-allUsers' },
       {
           field: "view",
           headerName: "View",
           flex: 0.1,
           minWidth: 70,
           renderCell: (params) => (
-              <IconButton onClick={() => navigate(`/users-profile/${params.row.id}`)}>
+              <IconButton onClick={() => navigate(`/users-profile/${params.row._id}`)}>
                   <VisibilityIcon className="view__icon__allusers" />
               </IconButton>
           ),
@@ -70,6 +74,7 @@ function AllUsers() {
             <DataGrid
                 rows={users}
                 columns={columns}
+                getRowId={(row) => row._id}
                 initialState={{
                     pagination: {
                         paginationModel: { page: 0, pageSize: 5 },

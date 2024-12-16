@@ -39,11 +39,13 @@ const toggleDrawer = (open) => (event) => {
 };
 
 
-  useEffect(() => {
-    if (currentUser) {
-      setRole(currentUser.role || "user");
-    }
-  }, [currentUser, role]);
+useEffect(() => {
+  if (currentUser) {
+    setRole(currentUser.isAdmin ? "admin" : "user");
+  }
+}, [currentUser]);
+
+
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -79,6 +81,7 @@ const toggleDrawer = (open) => (event) => {
                   <>
                     <div className="greetings__users">
                       Hello, {currentUser ? currentUser.fullName : "User"}
+                    
                     </div>
                   </>
                 ) : (
@@ -155,7 +158,7 @@ const toggleDrawer = (open) => (event) => {
           </Button>
 
           {/* All Users Button (Admin Only) */}
-          {currentUser && role === "admin" && (
+          {currentUser && currentUser.isAdmin && (
             <Button
               className="navbar__allUsers__button navbar__button__text"
               color="inherit"
@@ -173,6 +176,7 @@ const toggleDrawer = (open) => (event) => {
               All Users
             </Button>
           )}
+
 
           {/* User Account Menu */}
           <IconButton
@@ -217,6 +221,10 @@ const toggleDrawer = (open) => (event) => {
           <MenuItem
             sx={{ fontFamily: "inherit", fontSize: "18px" }}
             onClick={() => {
+              // Șterge tokenul din localStorage
+              localStorage.removeItem("token");
+              
+              // Face logout-ul și redirecționează utilizatorul către pagina de login
               doSignOut().then(() => {
                 navigate("/login");
               });

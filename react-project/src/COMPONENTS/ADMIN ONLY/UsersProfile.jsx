@@ -25,9 +25,10 @@ import Header from "../HEADER/Header";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import "./UsersProfile.css";
+import axios from "axios";
 
 function UsersProfile() {
-  const { userUId } = useParams();
+  const { userId } = useParams();
   const [userData, setUserData] = useState(null);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -35,30 +36,20 @@ function UsersProfile() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
+   useEffect(() => {
     const fetchUserData = async () => {
-      if (userUId) {
-        console.log(userUId);
+      console.log(userId)
+
+      if (userId) {
         try {
-          const userDocRef = doc(db, "users", userUId);
-          const userDoc = await getDoc(userDocRef);
-
-          if (userDoc.exists()) {
-            const userData = { uid: userUId, ...userDoc.data() };
-            const flatsQuery = query(
-              collection(db, "flats"),
-              where("userUid", "==", userUId)
-            );
-            const flatsSnapshot = await getDocs(flatsQuery);
-            const flatsData = flatsSnapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-
-            setUserData({ ...userData, flats: flatsData });
-          } else {
-            console.error("No such user!");
-          }
+          const token = localStorage.getItem("token"); // sau oriunde stochezi token-ul
+          const response = await axios.get(`http://localhost:3000/users/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log("Fetched user data:", response.data);
+          setUserData(response.data);
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -66,7 +57,7 @@ function UsersProfile() {
     };
 
     fetchUserData();
-  }, [userUId]);
+  }, [userId]);
 
   const handleMakeAdmin = () => {
     setIsDialogOpen(true);
@@ -78,7 +69,7 @@ function UsersProfile() {
 
   const handleSave = async () => {
     try {
-      const userDocRef = doc(db, "users", userUId);
+      const userDocRef = doc(db, "users", userId);
       await updateDoc(userDocRef, { role: "admin" });
       setUserData((prevState) => ({ ...prevState, role: "admin" }));
       setSnackbarMessage("User role updated to admin");
@@ -101,12 +92,12 @@ function UsersProfile() {
 
   const handleSaveRemoveUser = async () => {
     try {
-      const userDocRef = doc(db, "users", userUId);
+      const userDocRef = doc(db, "users", userId);
       const batch = writeBatch(db);
       batch.delete(userDocRef);
       const flatsQuery = query(
         collection(db, "flats"),
-        where("userUid", "==", userUId)
+        where("userId", "==", userId)
       );
       const flatsSnapshot = await getDocs(flatsQuery);
 
@@ -161,7 +152,7 @@ function UsersProfile() {
       headerName: "Rent Price",
     },
     {
-      field: "yearBuild",
+      field: "yearBuilt",
       headerName: "Year Built",
     },
     {
@@ -170,7 +161,7 @@ function UsersProfile() {
       flex:0.5,
     },
     {
-      field: "hasAc",
+      field: "hasAC",
       headerName: "Has AC",
       renderCell: (params) => (params.value ? "Yes" : "No"),
     },
@@ -204,7 +195,7 @@ function UsersProfile() {
                   variant="h6"
                   sx={{ fontFamily: "inherit", mt: "15px" }}
                 >
-                  UID: {userData.uid}
+                  Id: {userData._id}
                 </Typography>
                 <Typography
                   className="specific__information"
@@ -225,7 +216,7 @@ function UsersProfile() {
                   variant="h6"
                   sx={{ fontFamily: "inherit" }}
                 >
-                  Role: {userData.role}
+                  Is admin: {userData.isAdmin}
                 </Typography>
               </div>
 

@@ -27,6 +27,7 @@ import EditFlat from "../HOME ACTIONS/EditFlat";
 import "./Home.css";
 import "./FlatsTable.css";
 import { Dialog, DialogContentText, Button } from "@mui/material";
+import axios from "axios";
 
 function FlatsTable({ tableType, refetchFlag }) {
   const [flats, setFlats] = useState([]);
@@ -37,51 +38,110 @@ function FlatsTable({ tableType, refetchFlag }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const navigate = useNavigate();
+  
 
   const fetchFlats = async () => {
     let foundFlats;
     let searchFlats;
     if (tableType === "all") {
-      searchFlats = query(collection(db, "flats"));
-      foundFlats = await getDocs(searchFlats);
-    } else if (tableType === "myFlats" && currentUser) {
-      searchFlats = query(
-        collection(db, "flats"),
-        where("userUid", "==", currentUser.uid)
-      );
-      foundFlats = await getDocs(searchFlats);
-    } else if (tableType === "favorites" && currentUser) {
-      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-      const userData = userDoc.data();
-      if (userData.favorites && userData.favorites.length > 0) {
-        searchFlats = query(
-          collection(db, "flats"),
-          where(documentId(), "in", userData.favorites)
+      try {
+        
+        const token = localStorage.getItem("token");
+        if(!token) {
+          throw new Error("NO TOKEN FOUND")
+        }
+        const response = await axios.get(
+          'http://localhost:3000/flats/getAllFlats',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Trimite token-ul JWT în header
+            },
+          }
         );
-        foundFlats = await getDocs(searchFlats);
-      } else {
-        searchFlats = null;
-        foundFlats = null;
+        console.log(response)
+        if (response.status !== 200) {
+          throw new Error("Failed to fetch flats from backend");
+        }
+        // const data = await response.json();
+        setFlats(response.data.data);
+      } catch(error) {
+        console.log("The Error is: " + error)
       }
+    } else if (tableType === "myFlats" && currentUser) {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            throw new Error("NO TOKEN FOUND");
+        }
+        console.log("currentUser._id:", currentUser._id); 
+        const response = await axios.get(
+            `http://localhost:3000/flats/getMyFlats/${currentUser._id}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`, 
+                },
+            }
+        );
+        
+        console.log(response)
+
+        if (response.status !== 200) {
+            throw new Error("Failed to fetch flats from backend");
+        }
+        
+        setFlats(response.data.data);  // Salvează apartamentele
+    } catch (error) {
+        if(error.response.data.message == 'No flats found for this user') {
+           setFlats([]) ;
+        }
     }
 
-    if (foundFlats) {
-      const flatsList = foundFlats.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setFlats(flatsList);
-    } else {
-      setFlats([]);
+      
+      // searchFlats = query(
+      //   collection(db, "flats"),
+      //   where("userUid", "==", currentUser.uid)
+      // );
+      // foundFlats = await getDocs(searchFlats);
+    } else if (tableType === "favorites" && currentUser) {
+      try {
+        const token = localStorage.getItem("token");
+        if(!token) {
+          throw new Error("NO TOKEN FOUND")
+        }
+        const response = await axios.get(
+          'http://localhost:3000/flats/getAllFlats',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Trimite token-ul JWT în header
+            },
+          }
+        );
+        console.log(response)
+        if (response.status !== 200) {
+          throw new Error("Failed to fetch flats from backend");
+        }
+        setFlats(response.data.data);
+
+        // Logica pentru a obține apartamentele favorite
+        const favoriteFlatsResponse = await axios.get(
+          'http://localhost:3000/user/getFavoriteFlats',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Trimite token-ul utilizatorului
+            },
+          }
+        );
+        if (favoriteFlatsResponse.status === 200 && favoriteFlatsResponse.data.data) {
+          const favoriteFlats = favoriteFlatsResponse.data.data;
+          setFlats(favoriteFlats); // Actualizează state-ul cu apartamentele favorite
+        }
+      } catch(error) {
+        console.log("The Error is: " + error)
+      }
+      
     }
 
-    if (currentUser) {
-      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-      const userData = userDoc.data();
-      if (userData?.favorites.length > 0) {
-        setFavorites(userData.favorites);
-      }
-    }
+    
   };
 
   useEffect(() => {
@@ -92,9 +152,11 @@ function FlatsTable({ tableType, refetchFlag }) {
   }, [tableType, currentUser, role, refetchFlag]);
 
   const handleEdit = (id) => {
+    console.log("Flat ID for edit:", id); // Verifică dacă primești un ID valid
     setEditFlatId(id);
     setIsEditModalOpen(true);
-  };
+};
+
 
   const handleCloseEditModal = () => {
     fetchFlats();
@@ -104,30 +166,66 @@ function FlatsTable({ tableType, refetchFlag }) {
 
   const handleUpdateFlat = async (updatedFlat) => {
     try {
-      const flatDocRef = doc(db, "flats", updatedFlat.id);
-      await updateDoc(flatDocRef, updatedFlat);
+        const token = localStorage.getItem("token");
+        if (!token) {
+            throw new Error("No token found");
+        }
 
-      setFlats((prevFlats) =>
-        prevFlats.map((flat) =>
-          flat.id === updatedFlat.id ? updatedFlat : flat
-        )
+        const response = await axios.patch(
+            `http://localhost:3000/flats/updateFlat/${updatedFlat._id}`,  // URL-ul backend-ului pentru actualizare
+            updatedFlat,  // Datele flatului actualizate
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,  // Trimite token-ul pentru autentificare
+                },
+            }
+        );
+
+        if (response.status === 200) {
+            setFlats((prevFlats) =>
+                prevFlats.map((flat) =>
+                    flat.id === updatedFlat.id ? updatedFlat : flat
+                )
+            );
+            handleCloseEditModal();
+            console.log("Flat updated successfully");
+        } else {
+            console.log("Error updating flat:", response.data.message);
+        }
+    } catch (error) {
+        console.error("Error updating flat:", error);
+    }
+};
+
+
+const handleDeleteFlat = async (id) => {
+  try {
+      const token = localStorage.getItem("token"); // Asigură-te că ai un token valid
+      if (!token) {
+          throw new Error("No token found");
+      }
+
+      const response = await axios.delete(
+          `http://localhost:3000/flats/deleteFlat/${id}`, // Ruta backend pentru ștergere
+          {
+              headers: {
+                  Authorization: `Bearer ${token}`, // Trimite token-ul pentru autentificare
+              },
+          }
       );
 
-      handleCloseEditModal();
-    } catch (error) {
-      console.error("Error updating flat: ", error);
-    }
-  };
+      if (response.status === 200) {
+          setFlats(flats.filter((flat) => flat._id !== id)); // Actualizează lista de flats în UI
+          handleCloseDeleteModal(); // Închide modalul de confirmare
+          console.log("Flat deleted successfully");
+      } else {
+          console.log("Failed to delete flat:", response.data.message);
+      }
+  } catch (error) {
+      console.error("Error deleting flat:", error);
+  }
+};
 
-  const handleDeleteFlat = async (id) => {
-    try {
-      await deleteDoc(doc(db, "flats", id));
-      setFlats(flats.filter((flat) => flat.id !== id));
-      handleCloseDeleteModal();
-    } catch (error) {
-      console.error("Error deleting flat: ", error);
-    }
-  };
 
   const handleDelete = (id) => {
     setEditFlatId(id);
@@ -139,22 +237,23 @@ function FlatsTable({ tableType, refetchFlag }) {
   };
 
   const handleToggleFavorite = async (id) => {
-    const userToUpdate = doc(db, "users", currentUser.uid);
-    let updatedFavorites = [...favorites];
+    console.log("my bff")
+    // const userToUpdate = doc(db, "users", currentUser.uid);
+    // let updatedFavorites = [...favorites];
 
-    if (!favorites.includes(id)) {
-      updatedFavorites.push(id);
-      await updateDoc(userToUpdate, { favorites: updatedFavorites });
-    } else {
-      updatedFavorites = updatedFavorites.filter((favId) => favId !== id);
-      await updateDoc(userToUpdate, { favorites: updatedFavorites });
-    }
+    // if (!favorites.includes(id)) {
+    //   updatedFavorites.push(id);
+    //   await updateDoc(userToUpdate, { favorites: updatedFavorites });
+    // } else {
+    //   updatedFavorites = updatedFavorites.filter((favId) => favId !== id);
+    //   await updateDoc(userToUpdate, { favorites: updatedFavorites });
+    // }
 
-    setFavorites(updatedFavorites);
+    // setFavorites(updatedFavorites);
 
-    if (tableType === "favorites") {
-      setFlats(flats.filter((flat) => flat.id !== id));
-    }
+    // if (tableType === "favorites") {
+    //   setFlats(flats.filter((flat) => flat.id !== id));
+    // }
   };
 
   const handleDeleteFavorite = async (id) => {
@@ -177,6 +276,7 @@ function FlatsTable({ tableType, refetchFlag }) {
       console.error("Error deleting favorite: ", error);
     }
   };
+  
 
   const columns = [
     {
@@ -200,12 +300,12 @@ function FlatsTable({ tableType, refetchFlag }) {
       flex: 1,
     },
     {
-      field: "hasAc",
+      field: "hasAC",
       headerName: "Has AC",
       flex: 1,
     },
     {
-      field: "yearBuild",
+      field: "yearBuilt",
       headerName: "Year Built",
       flex: 1,
     },
@@ -223,12 +323,13 @@ function FlatsTable({ tableType, refetchFlag }) {
       field: "view",
       headerName: "View",
       renderCell: (params) => (
-        <IconButton onClick={() => navigate(`/flats/${params.row.id}`)}>
+        <IconButton onClick={() => navigate(`/flats/${params.row._id}`)}> 
           <Visibility style={{ color: "green" }} />
         </IconButton>
       ),
       flex: 1,
-    },
+    }
+    
   ];
 
   if (tableType === "all") {
@@ -236,11 +337,13 @@ function FlatsTable({ tableType, refetchFlag }) {
       field: "favorite",
       headerName: "Favorite",
       renderCell: (params) => {
-        const isOwner = params.row.userUid === currentUser.uid;
+        // console.log(params.row._id, currentUser._id)
+        const isOwner = params.row._id === currentUser._id;
+
         if (!isOwner) {
           return (
-            <IconButton onClick={() => handleToggleFavorite(params.row.id)}>
-              {favorites.includes(params.row.id) ? (
+            <IconButton onClick={() => handleToggleFavorite(params.row._id)}>
+              {favorites.includes(params.row._id) ? (
                 <Favorite style={{ color: "red" }} />
               ) : (
                 <FavoriteBorder style={{ color: "red" }} />
@@ -260,7 +363,7 @@ function FlatsTable({ tableType, refetchFlag }) {
         field: "edit",
         headerName: "Edit",
         renderCell: (params) => (
-          <IconButton onClick={() => handleEdit(params.row.id)}>
+          <IconButton onClick={() =>  handleEdit(params.row._id)}>
             <Edit style={{ color: "blue" }} />
           </IconButton>
         ),
@@ -270,7 +373,7 @@ function FlatsTable({ tableType, refetchFlag }) {
         field: "delete",
         headerName: "Delete",
         renderCell: (params) => (
-          <IconButton onClick={() => handleDelete(params.row.id)}>
+          <IconButton onClick={() => handleDelete(params.row._id)}>
             <Delete style={{ color: "red" }} />
           </IconButton>
         ),
@@ -304,9 +407,10 @@ function FlatsTable({ tableType, refetchFlag }) {
         }}
         autoHeight
         autosizeOnMount
-        rows={flats}
+        rows={flats && Array.isArray(flats) ? flats.map(flat => ({ ...flat, id: flat._id })) : []} // Verificăm dacă flats este un array valid
         columns={columns}
         pageSize={5}
+        getRowId={(row) => row._id} 
         initialState={{
           pagination: {
             paginationModel: {

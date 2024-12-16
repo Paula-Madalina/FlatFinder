@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import {
   Dialog,
   DialogActions,
@@ -19,18 +19,36 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
 import { ToastContainer } from "react-toastify";
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
-import './Profile.css'
+import './Profile.css';
+import axios from "axios";
 
 function Profile() {
-  const { currentUser } = useAuth();
+  const { currentUser,loading,refreshUser } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    fullName: currentUser.fullName,
-    email: currentUser.email,
-    birthDate: currentUser.birthDate,
-  });
+    fullName: "",
+    email: "",
+    birthDate: "",
+});
+
+if (loading) {
+  return <div>Loading...</div>;  
+}
+
+useEffect(() => {
+  console.log("Current User:", currentUser);
+  if (currentUser) {
+      setFormData({
+          fullName: currentUser.fullName || "",  
+          email: currentUser.email || "",
+          birthDate: currentUser.birthDate || "",
+      });
+  }
+}, [currentUser]); 
+
+
 
   const handleUpdateMyProfile = () => {
     setOpen(true);
@@ -49,16 +67,36 @@ function Profile() {
   };
 
   const handleSave = async () => {
-    try {
-      const userDocRef = doc(db, "users", currentUser.uid);
-      await setDoc(userDocRef, formData, { merge: true });
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
 
-      handleClose();
+    const response = await axios.patch(
+      `http://localhost:3000/users/updateUser/${currentUser._id}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    setFormData({fullName:response.data.user.fullName});
+    console.log(response);
+
+    if (response.status === 200) {
+      console.log("Profile updated successfully");
+     // await refreshUser(); 
       window.location.reload();
-    } catch (error) {
-      console.log(`ERROR IS:${error}`);
+      handleClose(); // Închide dialogul
+    } else {
+      console.error("Failed to update profile");
     }
-  };
+  } catch (error) {
+    console.error("ERROR IS:", error);
+  }
+};
+  
+
 
   const handleDelete = () => {
     setIsModalOpen(true);
@@ -71,35 +109,33 @@ function Profile() {
 
   const handleDeletePermission = async () => {
     try {
-      const batch = writeBatch(db);
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+      const response = await axios.delete(
+        `http://localhost:3000/users/deleteUser/${currentUser._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Trimite token-ul JWT în header
+          },
+        }
+      );
+      console.log(response)
+      if (response.status === 200) {
+        console.log("User deleted successfully.");
+        localStorage.removeItem("token");
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
 
-      const userDocRef = doc(db, "users", currentUser.uid);
-      batch.delete(userDocRef);
-
-      const flatsQuery = query(collection(db, "flats"), where("userUid", "==", currentUser.uid));
-      const flatsSnapshot = await getDocs(flatsQuery);
-
-      if (flatsSnapshot.empty) {
-        console.log("No flats found for the user.");
       } else {
-        console.log(`Found ${flatsSnapshot.size} flats to delete.`);
-        flatsSnapshot.docs.forEach(doc => {
-          console.log(`Deleting flat with ID: ${doc.id}`);
-          batch.delete(doc.ref);
-        });
+        console.log("Failed to delete the user.");
       }
-
-      await batch.commit();
-      console.log("Batch commit successful.");
-
-      await doSignOut();
       setIsModalOpen(false);
-
-      navigate("/login");
     } catch (error) {
-      console.error("Eroare la ștergerea contului:", error);
+      console.error("Error deleting user:", error);
     }
   };
+  
 
 
   return (
@@ -136,13 +172,13 @@ function Profile() {
             />
             <Container>
               <Typography sx={{ fontSize: "18px" }}>
-                Name: {currentUser.fullName}
+                Name: {formData.fullName==""? currentUser?.fullName : formData.fullName}
               </Typography>
               <Typography sx={{ fontSize: "18px" }}>
-                Email: {currentUser.email}
+                Email:{formData.email==""? currentUser?.email : formData.email}
               </Typography>
               <Typography sx={{ fontSize: "18px" }}>
-                Birth date: {currentUser.birthDate}
+                Birth date: {formData.birthDate==""? currentUser?.birthDate : formData.birthDate}
               </Typography>
               <Button
                 className="update__profile__button"

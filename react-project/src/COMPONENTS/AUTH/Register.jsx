@@ -20,6 +20,8 @@ import { useAuth } from "../../CONTEXT/authContext";
 import { doCreateUserWithEmailAndPassword } from "../../auth";
 import { db } from "../../firebase";
 import { setDoc, doc } from "firebase/firestore";
+import { isAdmin } from "@firebase/util";
+import axios from "axios";
 
 function Register() {
   const label = [];
@@ -84,40 +86,52 @@ function Register() {
     if (!isReg) {
       setIsReg(true);
       try {
-        const user = await doCreateUserWithEmailAndPassword(
-          formData.email,
-          formData.password
-        );
+        // const user = await doCreateUserWithEmailAndPassword(
+        //   formData.email,
+        //   formData.password
+        // );
         // Add user data in Firestore
-        await setDoc(doc(db, "users", user.user.uid), {
-          fullName: formData.fullName,
-          birthDate: formData.birthDate,
+        // await setDoc(doc(db, "users", user.user.uid), {
+        //   fullName: formData.fullName,
+        //   birthDate: formData.birthDate,
+        //   email: formData.email,
+        //   role: "user",
+        //   favorites: [],
+        //   uid: user.user.uid,
+        // });
+        const userDetails = {
           email: formData.email,
-          role: "user",
-          favorites: [],
-          uid: user.user.uid,
-        });
-
-        showToastr(
-          "success",
-          "Registration successful! You are being redirected."
-        );
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
-      } catch (error) {
-        if (error.code === "auth/email-already-in-use") {
-          showToastr(
-            "error",
-            "Email is already in use. Please use a different email."
-          );
-        } else {
-          console.log(
-            "Error creating user or saving to Firestore. Please try again."
-          );
+          password: formData.password,
+          fullName: formData.fullName,
+          birthDate:formData.birthDate, 
         }
-        console.log("Error creating user or saving to Firestore:", error);
+        
+				axios.post("http://localhost:3000/auth/register", userDetails).then(data => {
+          showToastr(
+            "success",
+            "Registration successful! You are being redirected."
+          );
+  
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+          console.log(data);
+        }).catch(error => {
+          console.log(error);
+          
+        })
+      // } catch (error) {
+      //   if (error.code === "auth/email-already-in-use") {
+      //     showToastr(
+      //       "error",
+      //       "Email is already in use. Please use a different email."
+      //     );
+      //   } else {
+      //     console.log(
+      //       "Error creating user or saving to Firestore. Please try again."
+      //     );
+      //   }
+      //   console.log("Error creating user or saving to Firestore:", error);
       } finally {
         setIsReg(false);
       }

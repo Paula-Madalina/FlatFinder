@@ -11,11 +11,13 @@ function FirstView() {
   };
 
   useEffect(() => {
-    if (!currentUser) {
-      navigate("/login");
+    const token = localStorage.getItem("token"); // Verifică dacă există un token
+    if (!token) {
+      navigate("/login"); // Redirecționează pe login dacă tokenul lipsește
     }
   }, []);
-  return (
+  
+    return (
     <div className="background__container">
       <div className="background__image"></div>
       <div className="background__overlay"></div>

@@ -18,6 +18,7 @@ import { useAuth } from "../../CONTEXT/authContext";
 import { doSignInWithEmailAndPassword } from "../../auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import axios from "axios";
 
 function Login() {
   const navigate = useNavigate();
@@ -45,43 +46,51 @@ function Login() {
   const handleClick = async () => {
     console.log(formData);
     let validationResponse = true;
-
+  
     // Validate Email
     validationResponse =
       validationRules["email"](formData.email) && validationResponse;
-
+  
     // Validate Password
     validationResponse =
       validationRules["password"](formData.password) && validationResponse;
-
+  
     if (!validationResponse) {
       showToastr("error", "Validation failed, correct the errors");
       return; // Stop execution if validation fails
     }
-
+  
     if (!isSigningIn) {
       setIsSigningIn(true);
       try {
-        const userCredential = await doSignInWithEmailAndPassword(
-          formData.email,
-          formData.password
+        const userLoginDetails = {
+          email: formData.email,
+          password: formData.password,
+        };
+  
+        // Trimitere cerere POST pentru login
+        const response = await axios.post(
+          "http://localhost:3000/auth/login",
+          userLoginDetails
         );
-        const user = userCredential.user;
-        console.log("User:", user);
-
-        const userDoc = doc(db, "users", user.uid);
-        const userSnapshot = await getDoc(userDoc);
-
-        if (userSnapshot.exists()) {
-          const userData = userSnapshot.data();
-          console.log("User data:", userData);
-
-          setCurrentUser(userData);
-
-          navigate("/FirstView");
-          // showToastr("success", "Login successful!");
+  
+        // Log the entire response to check the structure
+        console.log(response.data);
+  
+        const token = response.data.token;
+        const user = response.data.user; // Ensure the user data is present
+        
+        if (user) {
+          localStorage.setItem("token", token);
+          setCurrentUser(user); 
+          console.log(user); // Log the user object to check if it's correct
+          showToastr("success", "Login successful!");
+  
+          setTimeout(() => {
+            navigate("/FirstView");
+          }, 2000);
         } else {
-          showToastr("error", "User data not found.");
+          showToastr("error", "User data is missing in the response.");
         }
       } catch (error) {
         console.error(error);
@@ -91,6 +100,7 @@ function Login() {
       }
     }
   };
+  
 
   return (
     <>

@@ -17,6 +17,7 @@ import { useAuth } from "../../CONTEXT/authContext";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../firebase"; 
 import "../HOME/Home.css";
+import axios from "axios";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -24,7 +25,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function NewFlat({ setRefetchFlag }) {
   const [open, setOpen] = React.useState(false);
-  const [hasAc, setHasAc] = React.useState(false);
+  const [hasAC, setHasAC] = React.useState(false);
   const { currentUser } = useAuth();
 
   const handleClickOpen = () => {
@@ -36,35 +37,58 @@ export default function NewFlat({ setRefetchFlag }) {
   };
 
   const handleCheckboxChange = (event) => {
-    setHasAc(event.target.checked);
+    setHasAC(event.target.checked);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const formJson = Object.fromEntries(formData.entries());
-
+  
     // Add the hasAc checkbox value to formJson
-    formJson.hasAc = hasAc;
-
+    formJson.hasAC = hasAC;
+  
     if (currentUser) {
       const flatData = {
         ...formJson,
-        userUid: currentUser.uid, // Save the currentUser's uid
+        userUid: currentUser._id, // Save the currentUser's uid
         createdAt: new Date(), // Add a timestamp
       };
-
+      console.log(currentUser);
+      console.log(flatData);
+  
       try {
-        // Save the flat data to Firestore
-        await addDoc(collection(db, "flats"), flatData);
-        // Display success message
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
+        console.log(token);
+  
+        // Correct the axios request
+        const response = await axios.post(
+          `http://localhost:3000/flats/register`,
+          flatData, // Send flatData directly here
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+  
+        console.log(response);
+  
+        if (response.status !== 200) {
+          throw new Error("Failed to add flat");
+        }
+  
         showToastr(
           "success",
           "Your flat has been successfully added! You are being redirected."
         );
-
+  
         setRefetchFlag(true);
         handleClose();
+        // window.location.reload();
       } catch (error) {
         showToastr("error", `Error adding flat: ${error}`);
       }
@@ -72,6 +96,7 @@ export default function NewFlat({ setRefetchFlag }) {
       console.error("No currentUser is signed in.");
     }
   };
+  
 
   return (
     <React.Fragment>
@@ -155,9 +180,9 @@ export default function NewFlat({ setRefetchFlag }) {
           <FormControlLabel
             control={
               <Checkbox
-                checked={hasAc}
+                checked={hasAC}
                 onChange={handleCheckboxChange}
-                name="hasAc"
+                name="hasAC"
                 color="primary"
               />
             }
@@ -168,7 +193,7 @@ export default function NewFlat({ setRefetchFlag }) {
           <TextField
             required
             margin="dense"
-            name="yearBuild"
+            name="yearBuilt"
             label="Year Built"
             type="number"
             fullWidth

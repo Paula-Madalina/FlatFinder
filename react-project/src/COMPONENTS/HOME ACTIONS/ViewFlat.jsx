@@ -12,6 +12,7 @@ import showToastr from "../../SERVICES/toaster-service";
 import { ToastContainer } from "react-toastify";
 import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function ViewFlat() {
   const { flatId } = useParams();
@@ -26,28 +27,41 @@ function ViewFlat() {
   useEffect(() => {
     const fetchFlatAndOwner = async () => {
       try {
-        const flatDoc = await getDoc(doc(db, "flats", flatId));
-        if (flatDoc.exists()) {
-          const flatData = flatDoc.data();
-          setFlat(flatData);
-
-          // Fetch the owner's information
-          const ownerDoc = await getDoc(doc(db, "users", flatData.userUid));
-          if (ownerDoc.exists()) {
-            setOwner(ownerDoc.data());
-          } else {
-            console.error("Owner not found");
-          }
-        } else {
-          console.error("Flat not found");
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
         }
+  
+        // Cerere către backend pentru datele flat-ului
+        const flatResponse = await axios.get(
+          `http://localhost:3000/flats/getByID/${flatId}`, // Ruta backend
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Token pentru autentificare
+            },
+          }
+        );
+  
+        setFlat(flatResponse.data); // Setăm datele flatului
+  
+        // Dacă dorești să preiei date despre proprietar, modifică modelul pentru flat să includă un `populate` pe `ownerID`.
+        const ownerResponse = await axios.get(
+          `http://localhost:3000/users/${flatResponse.data.ownerID}`, // Exemplu pentru ruta utilizatorilor
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setOwner(ownerResponse.data); // Setăm datele utilizatorului
       } catch (error) {
         console.error("Error fetching flat or owner:", error);
       }
     };
-
+  
     fetchFlatAndOwner();
   }, [flatId]);
+  
 
   const handleEdit = () => {
     setEditFlatId(flatId);
@@ -59,14 +73,39 @@ function ViewFlat() {
     setEditFlatId(null);
   };
 
-  const handleUpdateFlat = async () => {
-    const flatDoc = await getDoc(doc(db, "flats", flatId));
-    if (flatDoc.exists()) {
-      setFlat(flatDoc.data()); // Refresh flat details
-    }
+  // const handleUpdateFlat = async () => {
+    // const flatDoc = await getDoc(doc(db, "flats", flatId));
+    // if (flatDoc.exists()) {
+    //   setFlat(flatDoc.data()); // Refresh flat details
+    // }
+    // handleCloseEditModal();
 
+    const handleUpdateFlat = async (updatedFlat) => {
+      try {
+          const token = localStorage.getItem("token");
+          if (!token) throw new Error("No token found");
+  
+          const response = await axios.get(
+              `http://localhost:3000/flats/getByID/${flatId}`,
+              {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
+              }
+          );
+  
+          if (response.status === 200) {
+              setFlat(response.data); // Actualizează datele flatului în UI
+              handleCloseEditModal();
+          }
+      } catch (error) {
+          console.error("Error fetching updated flat:", error);
+      }
     handleCloseEditModal();
+
   };
+  
+  // };
 
   const handleSendMessage = async () => {
     if (!currentUser || !flat) {
@@ -74,10 +113,10 @@ function ViewFlat() {
       return;
     }
 
-    const ownerDocRef = doc(db, "users", flat.userUid);
+    const ownerDocRef = doc(db, "users", flat.ownerID);
     const newMessage = {
       content: message,
-      senderUid: currentUser.uid,
+      senderUid: currentUser._id,
       senderName: currentUser.fullName,
       senderEmail: currentUser.email,
       createdAt: new Date(),
@@ -188,7 +227,7 @@ function ViewFlat() {
                     variant="body1"
                     sx={{ fontFamily: "inherit", fontSize: "18px" }}
                   >
-                    {flat.hasAc ? "Yes" : "No"}{" "}
+                    {flat.hasAC ? "Yes" : "No"}{" "}
                   </Typography>
                 </Grid>
                 <Grid item xs={4}>
@@ -204,7 +243,7 @@ function ViewFlat() {
                     variant="body1"
                     sx={{ fontFamily: "inherit", fontSize: "18px" }}
                   >
-                    {flat.yearBuild}
+                    {flat.yearBuilt}
                   </Typography>
                 </Grid>
                 <Grid item xs={4}>
@@ -242,7 +281,7 @@ function ViewFlat() {
               </Grid>
             </div>
             <Container sx={{ padding: 0 }}>
-              {flat.userUid !== currentUser.uid ? (
+              {flat.ownerID !== currentUser._id ? (
                 <Container
                   sx={{
                     width: "100%",

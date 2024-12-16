@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import axios from "axios";
+
 
 const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
   const [flatData, setFlatData] = useState({});
@@ -21,11 +23,23 @@ const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
     const fetchFlatData = async () => {
       if (flatId) {
         try {
-          const flatDoc = await getDoc(doc(db, "flats", flatId));
-          if (flatDoc.exists()) {
-            setFlatData(flatDoc.data());
-          } else {
-            console.error("Flat not found");
+          const token = localStorage.getItem("token");
+          if (!token) {
+            throw new Error("No token found");
+          }
+
+          // Cerere către backend pentru a prelua datele flatului
+          const response = await axios.get(
+            `http://localhost:3000/flats/getByID/${flatId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            setFlatData(response.data); // Setăm datele flatului
           }
         } catch (error) {
           console.error("Error fetching flat details:", error);
@@ -36,18 +50,37 @@ const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
     fetchFlatData();
   }, [flatId]);
 
+
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     setFlatData({ ...flatData, [name]: type === "checkbox" ? checked : value });
   };
 
-  const handleSave = async () => {
+   const handleSave = async () => {
     try {
-      await updateDoc(doc(db, "flats", flatId), flatData);
-      onUpdate(flatData); 
-      onClose();
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
+      // Cerere PATCH pentru actualizarea flatului
+      const response = await axios.patch(
+        `http://localhost:3000/flats/updateFlat/${flatId}`,
+        flatData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        onUpdate(response.data.data); 
+        onClose(); 
+        window.location.reload();
+      }
     } catch (error) {
-      console.error("Error updating flat: ", error);
+      console.error("Error updating flat:", error);
     }
   };
   
@@ -130,13 +163,13 @@ const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
         <FormControlLabel
           control={
             <Checkbox
-              checked={flatData.hasAc || false}
+              checked={flatData.hasAC || false}
               onChange={(e) =>
                 handleChange({
-                  target: { name: "hasAc", value: e.target.checked },
+                  target: { name: "hasAC", value: e.target.checked },
                 })
               }
-              name="hasAc"
+              name="hasAC"
               color="primary"
             />
           }
@@ -147,13 +180,13 @@ const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
         <TextField
           required
           margin="dense"
-          name="yearBuild"
+          name="yearBuilt"
           label="Year Built"
           type="number"
           fullWidth
           variant="outlined"
           sx={{ marginTop: 2 }}
-          value={flatData.yearBuild || ""}
+          value={flatData.yearBuilt || ""}
           onChange={handleChange}
         />
         <TextField

@@ -18,10 +18,11 @@ function Home() {
   };
 
   useEffect(() => {
-    if (!currentUser) {
-      navigate("/login");
+    const token = localStorage.getItem("token"); // Verifică dacă există un token
+    if (!token) {
+      navigate("/login"); // Redirecționează pe login dacă tokenul lipsește
     }
-  }, [currentUser, navigate]);
+  }, []);
 
   return (
     <div className="background__container__home">
