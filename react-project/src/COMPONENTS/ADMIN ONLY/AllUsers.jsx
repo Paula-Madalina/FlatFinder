@@ -18,22 +18,43 @@ function AllUsers() {
         const fetchUsers = async () => {
             try {
                 const token = localStorage.getItem("token");
-                if(!token) {
-                    throw new Error("NO TOKEN FOUND")
+                if (!token) {
+                    throw new Error("NO TOKEN FOUND");
                 }
-
+    
+                // Obține utilizatorii
                 const response = await axios.get('http://localhost:3000/users', {
                     headers: {
-                        Authorization: `Bearer ${token}` 
-                    }
+                        Authorization: `Bearer ${token}`,
+                    },
                 });
-                setUsers(response.data); // Presupunând că răspunsul conține lista de utilizatori
+    
+                // Adaugă numărul de apartamente pentru fiecare utilizator
+                const usersWithFlatsCount = await Promise.all(
+                    response.data.map(async (user) => {
+                        // Cerere pentru a obține numărul de apartamente
+                        const flatsCountResponse = await axios.get(`http://localhost:3000/flats/flatsCount/${user._id}`, {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        });
+    
+                        return {
+                            ...user,
+                            flatsCount: flatsCountResponse.data.count,  // Adăugăm numărul de apartamente
+                        };
+                    })
+                );
+    
+                setUsers(usersWithFlatsCount); // Salvează utilizatorii cu numărul de apartamente
             } catch (error) {
                 console.error('Error fetching users:', error);
             }
         };
+    
         fetchUsers();
     }, []);
+    
 
     const columns = [
       { field: 'fullName', headerName: 'Name', flex: 0.2, minWidth: 120, headerClassName: 'header-style-allUsers', cellClassName: 'cell-style-allUsers' },

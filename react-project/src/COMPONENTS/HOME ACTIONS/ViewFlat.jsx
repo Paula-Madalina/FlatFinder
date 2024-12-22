@@ -112,31 +112,49 @@ function ViewFlat() {
       console.error("User not signed in or flat data not loaded");
       return;
     }
-
-    const ownerDocRef = doc(db, "users", flat.ownerID);
+  
     const newMessage = {
       content: message,
-      senderUid: currentUser._id,
+      senderID: currentUser._id,  // ID-ul utilizatorului
       senderName: currentUser.fullName,
       senderEmail: currentUser.email,
-      createdAt: new Date(),
-      flatId: flatId,
+      created: new Date(),
+      flatID: flatId,  // ID-ul platoului
     };
-
+  
     if (message !== "") {
       try {
-        await updateDoc(ownerDocRef, {
-          messages: arrayUnion(newMessage),
-        });
-        setMessage("");
-        showToastr("success", "Message sent successfully!");
+        // Trimite cererea POST către backend pentru a salva mesajul în MongoDB
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+          `http://localhost:3000/messages/addMessage/${flatId}`,
+          newMessage,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,  // Auth token pentru a valida utilizatorul
+            },
+          }
+        );
+    
+        console.log(response.data); // Răspunsul va conține acum obiectul complet cu mesajul
+    
+        // Dacă cererea este cu succes
+        if (response.status === 200) {
+          setMessage("");  // Resetează câmpul de mesaj
+          showToastr("success", "Message sent successfully!");
+    
+          // Afișează contentul mesajului
+          console.log("Message Content:", response.data.data.content); // Afișează contentul
+        }
       } catch (error) {
         console.error("Error sending message:", error);
+        showToastr("error", "Error sending message.");
       }
     } else {
       showToastr("error", "Can't send a message without content!");
     }
   };
+  
 
   if (!flat || !owner) return <Typography>Loading flat details...</Typography>;
 

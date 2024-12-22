@@ -36,20 +36,35 @@ function UsersProfile() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const navigate = useNavigate();
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchUserData = async () => {
-      console.log(userId)
 
       if (userId) {
         try {
-          const token = localStorage.getItem("token"); // sau oriunde stochezi token-ul
+          const token = localStorage.getItem("token");
           const response = await axios.get(`http://localhost:3000/users/${userId}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
-          console.log("Fetched user data:", response.data);
-          setUserData(response.data);
+          console.log("User data:", response.data);
+          // Apel pentru apartamentele utilizatorului
+      const flatsResponse = await axios.get(`http://localhost:3000/flats/flatByUserId/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("User flats:", flatsResponse.data);
+
+ // Actualizează userData cu informațiile despre utilizator și apartamente
+      setUserData({
+        ...response.data,
+        flats: flatsResponse.data.map((flat, index) => ({
+          ...flat,
+          id: index + 1, // Adaugă un id unic pentru DataGrid
+        })),
+      });
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -57,7 +72,7 @@ function UsersProfile() {
     };
 
     fetchUserData();
-  }, [userId]);
+  }, [userId]); 
 
   const handleMakeAdmin = () => {
     setIsDialogOpen(true);
@@ -69,12 +84,30 @@ function UsersProfile() {
 
   const handleSave = async () => {
     try {
-      const userDocRef = doc(db, "users", userId);
-      await updateDoc(userDocRef, { role: "admin" });
-      setUserData((prevState) => ({ ...prevState, role: "admin" }));
-      setSnackbarMessage("User role updated to admin");
+      // const userDocRef = doc(db, "users", userId);
+      // await updateDoc(userDocRef, { role: "admin" });
+      // setUserData((prevState) => ({ ...prevState, role: "admin" }));
+      // setSnackbarMessage("User role updated to admin");
+      // setOpenSnackbar(true);
+      // handleClose();
+      const token = localStorage.getItem("token");
+      if(!token) {
+        throw new Error("NO TOKEN FOUND");
+      }
+
+      const response = await axios.patch(`http://localhost:3000/users/makeAdmin/${userId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+      console.log(response.data);
+      setSnackbarMessage(response.data.message || "User updated to admin");
       setOpenSnackbar(true);
       handleClose();
+      window.location.reload();
     } catch (error) {
       console.error("Error updating user role:", error);
       setSnackbarMessage("Failed to update user role");
@@ -92,26 +125,36 @@ function UsersProfile() {
 
   const handleSaveRemoveUser = async () => {
     try {
-      const userDocRef = doc(db, "users", userId);
-      const batch = writeBatch(db);
-      batch.delete(userDocRef);
-      const flatsQuery = query(
-        collection(db, "flats"),
-        where("userId", "==", userId)
-      );
-      const flatsSnapshot = await getDocs(flatsQuery);
+      // const userDocRef = doc(db, "users", userId);
+      // const batch = writeBatch(db);
+      // batch.delete(userDocRef);
+      // const flatsQuery = query(
+      //   collection(db, "flats"),
+      //   where("userId", "==", userId)
+      // );
+      // const flatsSnapshot = await getDocs(flatsQuery);
 
-      flatsSnapshot.docs.forEach((doc) => {
-        batch.delete(doc.ref);
+      // flatsSnapshot.docs.forEach((doc) => {
+      //   batch.delete(doc.ref);
+      // });
+
+      // // Execute batch
+      // await batch.commit();
+console.log(userId)
+      const token = localStorage.getItem("token");
+      if(!token) {
+        throw new Error("NO TOKEN FOUND");
+      }
+      const response = await axios.delete(`http://localhost:3000/users/deleteUser/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
+      console.log(response.data)
 
-      // Execute batch
-      await batch.commit();
-
-      setSnackbarMessage("User and associated flats removed successfully");
+      setSnackbarMessage(response.data.message || "User and associated flats removed successfully");
       setOpenSnackbar(true);
-      setUserData(null); // Reset userData after deletion
-
+      setUserData(null); 
       navigate("/all-users");
     } catch (error) {
       console.error("Error removing user:", error);
@@ -128,7 +171,7 @@ function UsersProfile() {
     {
       field: "id",
       headerName: "ID",
-      flex:0.7
+      flex:0.1
     },
     {
       field: "city",
@@ -137,7 +180,7 @@ function UsersProfile() {
     {
       field: "streetName",
       headerName: "Street Name",
-      flex:0.5,
+      flex:0.2,
     },
     {
       field: "streetNumber",
@@ -158,7 +201,7 @@ function UsersProfile() {
     {
       field: "dateAvailable",
       headerName: "Date Available",
-      flex:0.5,
+      flex:0.3,
     },
     {
       field: "hasAC",
@@ -229,7 +272,7 @@ function UsersProfile() {
                   marginTop: "100px",
                 }}
               >
-                {userData.role === "user" && (
+                {!userData.isAdmin && (
                   <>
                     <Button
                       variant="contained"

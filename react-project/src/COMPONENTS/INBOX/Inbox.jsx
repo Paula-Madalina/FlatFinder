@@ -28,76 +28,92 @@ const Inbox = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (currentUser) {
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
+    // console.log("FlatDetails object:", flatDetails); // Vezi tot obiectul
 
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          const messages = userData.messages || [];
+    const fetchUserMessages = async () => {
+      // console.log("dfgh");
+      // console.log(currentUser);
+      console.log(flatDetails);
 
-          // Group messages by senderUid
-          const grouped = messages.reduce((acc, message) => {
-            const senderUid = message.senderUid;
-            if (!acc[senderUid]) {
-              acc[senderUid] = [];
+      if (!currentUser || !flatDetails.flatID) return;
+  
+      try {
+        console.log("dfgh");
+        const response = await fetch(
+          `http://localhost:5000/messages/getUserMessages/${flatDetails.flatID}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${currentUser.token}`,
+            },
+          }
+        );
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          const grouped = data.allMessages.reduce((acc, message) => {
+            const senderId = message.senderID;
+            if (!acc[senderId]) {
+              acc[senderId] = [];
             }
-            acc[senderUid].push(message);
+            acc[senderId].push(message);
             return acc;
           }, {});
-
+  
           setGroupedMessages(grouped);
-
-          // Fetch flat details
-          const flatIds = [...new Set(messages.map((msg) => msg.flatId))];
-          const flatDetailsPromises = flatIds.map(async (flatId) => {
-            const flatDocRef = doc(db, "flats", flatId);
-            const flatDocSnap = await getDoc(flatDocRef);
-            return { flatId, ...flatDocSnap.data() };
-          });
-
-          const flatDetailsArray = await Promise.all(flatDetailsPromises);
-          const flatDetailsObj = flatDetailsArray.reduce((acc, flat) => {
-            acc[flat.flatId] = flat;
-            return acc;
-          }, {});
-
-          setFlatDetails(flatDetailsObj);
+        } else {
+          console.error(data.message || "Error fetching user messages.");
         }
+      } catch (error) {
+        console.error("Error fetching user messages:", error);
       }
     };
-
-    fetchMessages();
-  }, [currentUser]);
+  
+    fetchUserMessages();
+  }, [currentUser, flatDetails]);
+  
 
   const handleReplyChange = (senderUid, value) => {
     setReply({ ...reply, [senderUid]: value });
   };
 
-  const handleSendReply = async (senderUid) => {
-    if (!currentUser || !reply[senderUid]) return;
-
-    const replyMessage = {
-      content: reply[senderUid],
-      senderUid: currentUser.uid,
-      senderName: currentUser.fullName,
-      senderEmail: currentUser.email,
-      createdAt: new Date(),
+  const handleSendReply = async (flatID) => {
+    if (!currentUser || !reply[flatID]) return;
+  
+    const messageDetails = {
+      content: reply[flatID],
     };
-
+  
     try {
-      const senderDocRef = doc(db, "users", senderUid);
-      await updateDoc(senderDocRef, {
-        messages: arrayUnion(replyMessage),
-      });
-      setReply({ ...reply, [senderUid]: "" }); // Clear the reply input
-      setShowInput({ ...showInput, [senderUid]: false }); // Hide input after sending
-      showToastr("success", "Reply sent successfully!");
+      const response = await fetch(
+        `http://localhost:5000/messages/addMessage/${flatID}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentUser.token}`,
+          },
+          body: JSON.stringify(messageDetails),
+        }
+      );
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        setReply({ ...reply, [flatID]: "" });
+        setShowInput({ ...showInput, [flatID]: false });
+        showToastr("success", "Message sent successfully!");
+      } else {
+        console.error(data.message || "Error sending message.");
+        showToastr("error", "Failed to send message.");
+      }
     } catch (error) {
-      console.error("Error sending reply:", error);
+      console.error("Error sending message:", error);
     }
   };
+  
 
   const toggleInputVisibility = (senderUid) => {
     setShowInput({ ...showInput, [senderUid]: !showInput[senderUid] });

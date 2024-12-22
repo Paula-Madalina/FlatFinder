@@ -102,47 +102,31 @@ function FlatsTable({ tableType, refetchFlag }) {
       //   where("userUid", "==", currentUser.uid)
       // );
       // foundFlats = await getDocs(searchFlats);
-    } else if (tableType === "favorites" && currentUser) {
-      try {
-        const token = localStorage.getItem("token");
-        if(!token) {
-          throw new Error("NO TOKEN FOUND")
-        }
-        const response = await axios.get(
-          'http://localhost:3000/flats/getAllFlats',
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Trimite token-ul JWT în header
-            },
+  } else if (tableType === "favorites" && currentUser) {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            throw new Error("NO TOKEN FOUND");
           }
-        );
-        console.log(response)
-        if (response.status !== 200) {
-          throw new Error("Failed to fetch flats from backend");
-        }
-        setFlats(response.data.data);
-
-        // Logica pentru a obține apartamentele favorite
-        const favoriteFlatsResponse = await axios.get(
-          'http://localhost:3000/user/getFavoriteFlats',
-          {
+          
+          // Apelăm endpoint-ul pentru a obține doar apartamentele favorite
+          const response = await axios.get(`http://localhost:3000/flats/getFavoriteFlats/${currentUser._id}`, {
             headers: {
-              Authorization: `Bearer ${token}`, // Trimite token-ul utilizatorului
+              Authorization: `Bearer ${token}`,
             },
-          }
-        );
-        if (favoriteFlatsResponse.status === 200 && favoriteFlatsResponse.data.data) {
-          const favoriteFlats = favoriteFlatsResponse.data.data;
-          setFlats(favoriteFlats); // Actualizează state-ul cu apartamentele favorite
-        }
-      } catch(error) {
-        console.log("The Error is: " + error)
-      }
-      
-    }
-
+          });
     
-  };
+          if (response.status === 200 && response.data.data) {
+            const favoriteFlats = response.data.data;
+            setFlats(favoriteFlats);  // Actualizează starea cu apartamentele favorite
+          } else {
+            console.log('No favorite flats found');
+          }
+        } catch (error) {
+          console.log("The Error is: " + error);
+        }
+      }
+    };
 
   useEffect(() => {
     if (currentUser) {
@@ -236,46 +220,93 @@ const handleDeleteFlat = async (id) => {
     setDeleteModal(false);
   };
 
-  const handleToggleFavorite = async (id) => {
-    console.log("my bff")
-    // const userToUpdate = doc(db, "users", currentUser.uid);
-    // let updatedFavorites = [...favorites];
 
-    // if (!favorites.includes(id)) {
-    //   updatedFavorites.push(id);
-    //   await updateDoc(userToUpdate, { favorites: updatedFavorites });
-    // } else {
-    //   updatedFavorites = updatedFavorites.filter((favId) => favId !== id);
-    //   await updateDoc(userToUpdate, { favorites: updatedFavorites });
-    // }
-
-    // setFavorites(updatedFavorites);
-
-    // if (tableType === "favorites") {
-    //   setFlats(flats.filter((flat) => flat.id !== id));
-    // }
-  };
-
-  const handleDeleteFavorite = async (id) => {
-    if (!currentUser) return;
-
-    try {
-      const userToUpdate = doc(db, "users", currentUser.uid);
-      const data = await getDoc(userToUpdate);
-      const user = data.data();
-      const updatedFavorites = user.favorites.filter((favId) => favId !== id);
-
-      await updateDoc(userToUpdate, { favorites: updatedFavorites });
-
-      setFavorites(updatedFavorites);
-
-      if (tableType === "favorites") {
-        setFlats(flats.filter((flat) => flat.id !== id));
+const handleToggleFavorite = async (flatId) => {
+  try {
+    const token = localStorage.getItem("token"); 
+      if (!token) {
+          throw new Error("No token found");
       }
-    } catch (error) {
-      console.error("Error deleting favorite: ", error);
+
+      const response = await axios.post(
+        `http://localhost:3000/flats/favorite/${flatId}`, 
+        {}, 
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, 
+          },
+        }
+      );
+
+    if (response.status === 200) {
+      console.log("Favorite updated:", response.data);
+      // Actualizează lista locală de favorite după ce primești răspunsul de la server
+      setFavorites((prevFavorites) =>
+        prevFavorites.includes(flatId)
+          ? prevFavorites.filter((id) => id !== flatId) // Elimină dacă există
+          : [...prevFavorites, flatId] // Adaugă dacă nu există
+      );
+    } else {
+      console.error("Error updating favorite:", response.data.error);
     }
-  };
+  } catch (error) {
+    console.error("Error:", error.response?.data || error.message);
+  }
+};
+
+
+const handleDeleteFavorite = async (id) => {
+  if (!currentUser) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No token found");
+    }
+
+    console.log("ID to delete:", id);  // Verifică ID-ul care este trimis
+    console.log("Favorites before update:", favorites);  // Verifică favoritele înainte de update
+
+    // Trimite cererea DELETE către backend pentru a elimina apartamentul din favorite
+    const response = await axios.delete(`http://localhost:3000/flats/removeFavorite/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("Response data:", response.data);  // Verifică ce răspunde backend-ul
+
+    if (response.status === 200) {
+      // Actualizează lista de favorite în frontend fără a aștepta un reload al paginii
+      const updatedFavorites = favorites.filter((flat) => flat?.toString() !== id?.toString());
+      console.log("Updated favorites:", updatedFavorites);
+
+      // Actualizare directă a stării pentru favorites
+      setFavorites(updatedFavorites); 
+
+      // Actualizează lista de flats dacă suntem pe pagina de favorite
+      if (tableType === "favorites") {
+        const updatedFlats = flats.filter((flat) => flat?.id?.toString() !== id?.toString());
+        console.log("Updated flats:", updatedFlats);
+        setFlats(updatedFlats);
+      }
+
+      console.log("Flat removed from favorites:", response.data);  
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error("Error deleting favorite:", error);
+  }
+};
+
+ 
+
+
+
+
+
+
   
 
   const columns = [
@@ -387,7 +418,7 @@ const handleDeleteFlat = async (id) => {
       field: "favorite",
       headerName: "Delete Favorite",
       renderCell: (params) => (
-        <IconButton onClick={() => handleDeleteFavorite(params.row.id)}>
+        <IconButton onClick={() => handleDeleteFavorite(params.row._id)}>
           <HeartBrokenIcon style={{ color: "red" }} />
         </IconButton>
       ),
