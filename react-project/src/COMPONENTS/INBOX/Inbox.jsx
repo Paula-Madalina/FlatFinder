@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../CONTEXT/authContext";
-import { db } from "../../firebase";
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import axios from "axios"; // Adaugă axios
 import {
   Typography,
   Card,
@@ -20,88 +19,126 @@ import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import { useNavigate } from "react-router-dom";
 
 const Inbox = () => {
-  const [groupedMessages, setGroupedMessages] = useState({});
-  const [flatDetails, setFlatDetails] = useState({});
-  const [reply, setReply] = useState({});
-  const [showInput, setShowInput] = useState({});
-  const { currentUser } = useAuth();
+  const [groupedMessages, setGroupedMessages] = useState({}); // State pentru mesajele grupate
+  const [reply, setReply] = useState({}); // State pentru reply
+  const [showInput, setShowInput] = useState({}); // State pentru a controla vizibilitatea input-ului
+  const { currentUser } = useAuth(); // Obținem utilizatorul curent
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserMessages = async (userId) => {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                throw new Error("Token not found");
-            }
-
-            const response = await axios.get(`/messages/${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`, // Adaugă token-ul pentru autentificare
-                },
-            });
-
-            console.log(response.data); // Mesajele utilizatorului
-        } catch (error) {
-            if (error.response) {
-                // Serverul a răspuns cu un cod de eroare (4xx, 5xx)
-                console.error("Eroare la preluarea mesajelor:", error.response.data);
-            } else if (error.request) {
-                // Cererea a fost făcută, dar nu s-a primit răspuns
-                console.error("Nu s-a primit răspuns de la server:", error.request);
-            } else {
-                // Alte erori
-                console.error("Eroare:", error.message);
-            }
+    const fetchUserMessages = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Token not found");
         }
+  
+        const response = await axios.get('http://localhost:3000/messages/user', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Adaugă token-ul pentru autentificare
+          },
+        });
+  
+        if (response.status === 404) {
+          console.log("No messages found");
+        } else if (response.data?.data) {
+          // Grupăm mesajele după senderID
+          const grouped = response.data.data.reduce((acc, message) => {
+            const senderId = message.senderID._id;
+            if (!acc[senderId]) {
+              acc[senderId] = [];
+            }
+            acc[senderId].push({
+              content: message.content,
+              flatId: message.flatID?._id,
+              flatName: message.flatID?.name,
+              flatAddress: message.flatID?.address,
+              senderName: message.senderID.fullName,
+              createdAt: message.created,
+            });
+            return acc;
+          }, {});
+          setGroupedMessages(grouped); // Setează mesajele grupate în state
+        } else {
+          console.error("No data received from API.");
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          console.log("No messages found"); // Mesaj personalizat pentru 404
+        } else {
+          console.error("Error fetching messages:", error); // Mesaj generic pentru alte erori
+        }
+      }
     };
-
-    // Asigură-te că `currentUser.id` este valid
-    if (currentUser?.id) {
-        fetchUserMessages(currentUser.id);
+  
+    if (currentUser) {
+      fetchUserMessages(); // Fetch mesajele la montarea componentei
     }
-}, [currentUser, flatDetails]);
+  }, [currentUser]);
   
 
   const handleReplyChange = (senderUid, value) => {
+    console.log(senderUid)
     setReply({ ...reply, [senderUid]: value });
   };
 
-  const handleSendReply = async (flatID) => {
-    if (!currentUser || !reply[flatID]) return;
-  
-    const messageDetails = {
-      content: reply[flatID],
-    };
-  
-    try {
-      const response = await fetch(
-        `http://localhost:5000/messages/addMessage/${flatID}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${currentUser.token}`,
-          },
-          body: JSON.stringify(messageDetails),
-        }
-      );
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        setReply({ ...reply, [flatID]: "" });
-        setShowInput({ ...showInput, [flatID]: false });
-        showToastr("success", "Message sent successfully!");
-      } else {
-        console.error(data.message || "Error sending message.");
-        showToastr("error", "Failed to send message.");
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
+
+  const handleSendReply = async (senderUid) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        throw new Error("Token not found");
     }
-  };
-  
+    if (!currentUser || !reply[senderUid]) return;
+
+    // Găsește primul mesaj din grupul respectiv pentru a prelua flatID
+    const message = groupedMessages[senderUid]?.[0]; // Preia primul mesaj din grupul expeditorului
+    const flatID = message?.flatId; // Obține flatID din mesajul respectiv
+
+    if (!flatID || !senderUid || !reply[senderUid]) {
+        console.error("Missing required fields: flatID, receiverID, or content.");
+        showToastr("error", "Please fill all required fields.");
+        return; // Ieși din funcție dacă lipsesc câmpuri
+    }
+
+    const messageDetails = {
+        content: reply[senderUid], // Conținutul răspunsului
+        senderID: currentUser.id, // ID-ul utilizatorului curent (expeditorul răspunsului)
+        receiverID: senderUid, // ID-ul expeditorului mesajului inițial (cel care a primit răspunsul)
+        flatID: flatID, // Aici trebuie să fie un ID valid
+    };
+
+    try {
+        const response = await axios.post(
+            `http://localhost:3000/messages/reply/${senderUid}`, // Noua rută de răspuns
+            messageDetails, // Detaliile răspunsului
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // Token-ul pentru autentificare
+                },
+            }
+        );
+
+        if (response.status === 200) {
+            setReply({ ...reply, [senderUid]: "" });
+            setShowInput({ ...showInput, [senderUid]: false });
+            showToastr("success", "Reply sent successfully!");
+        } else {
+            console.error(response.data.message || "Error sending reply.");
+            showToastr("error", "Failed to send reply.");
+        }
+    } catch (error) {
+        console.error("Error sending reply:", error);
+        showToastr("error", "Failed to send reply.");
+    }
+};
+
+
+
+
+
+
+
 
   const toggleInputVisibility = (senderUid) => {
     setShowInput({ ...showInput, [senderUid]: !showInput[senderUid] });
@@ -109,7 +146,7 @@ const Inbox = () => {
 
   return (
     <>
-      <ToastContainer></ToastContainer>
+      <ToastContainer />
       <div className="background__container__inbox">
         <Header />
         <KeyboardReturnIcon
@@ -119,13 +156,9 @@ const Inbox = () => {
             margin: "10px 20px",
             cursor: "pointer",
           }}
-        ></KeyboardReturnIcon>
-
+        />
         <Container>
-          <Typography
-            sx={{ display: "flex", justifyContent: "center" }}
-            gutterBottom
-          >
+          <Typography sx={{ display: "flex", justifyContent: "center" }} gutterBottom>
             <h2 className="inbox__title">MESSAGES</h2>
           </Typography>
           <Stack className="stack__container" spacing={2}>
@@ -150,29 +183,21 @@ const Inbox = () => {
                     <Typography variant="h6">
                       From: {groupedMessages[senderUid][0].senderName}
                     </Typography>
-                    {groupedMessages[senderUid].map((message, index) => {
-                      const flat = flatDetails[message.flatId];
-                      return (
-                        <div key={index} style={{ marginBottom: "10px" }}>
-                          <Typography variant="body1">
-                            {message.content}
-                          </Typography>
-                          {flat && (
-                            <Typography variant="caption" color="textSecondary">
-                              Flat Location: {flat.city}, {flat.streetName}{" "}
-                              {flat.streetNumber}
-                            </Typography>
-                          )}
-                          <br />
+                    {groupedMessages[senderUid].map((message, index) => (
+                      <div key={index} style={{ marginBottom: "10px" }}>
+                        <Typography variant="body1">{message.content}</Typography>
+                        {message.flatName && (
                           <Typography variant="caption" color="textSecondary">
-                            Sent on:{" "}
-                            {new Date(
-                              message.createdAt.seconds * 1000
-                            ).toLocaleString()}
+                            Flat: {message.flatName}, {message.flatAddress}
                           </Typography>
-                        </div>
-                      );
-                    })}
+                        )}
+                        <br />
+                        <Typography variant="caption" color="textSecondary">
+                          Sent on:{" "}
+                          {new Date(message.createdAt).toLocaleString()}
+                        </Typography>
+                      </div>
+                    ))}
                   </CardContent>
                   <CardActions
                     className="card__actions"
@@ -184,9 +209,7 @@ const Inbox = () => {
                         label="Reply"
                         variant="outlined"
                         value={reply[senderUid] || ""}
-                        onChange={(e) =>
-                          handleReplyChange(senderUid, e.target.value)
-                        }
+                        onChange={(e) => handleReplyChange(senderUid, e.target.value)}
                       />
                     )}
                     <Button
