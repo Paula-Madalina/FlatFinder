@@ -28,51 +28,39 @@ const Inbox = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // console.log("FlatDetails object:", flatDetails); // Vezi tot obiectul
-
-    const fetchUserMessages = async () => {
-      // console.log("dfgh");
-      // console.log(currentUser);
-      console.log(flatDetails);
-
-      if (!currentUser || !flatDetails.flatID) return;
-  
-      try {
-        console.log("dfgh");
-        const response = await fetch(
-          `http://localhost:5000/messages/getUserMessages/${flatDetails.flatID}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${currentUser.token}`,
-            },
-          }
-        );
-  
-        const data = await response.json();
-  
-        if (response.ok) {
-          const grouped = data.allMessages.reduce((acc, message) => {
-            const senderId = message.senderID;
-            if (!acc[senderId]) {
-              acc[senderId] = [];
+    const fetchUserMessages = async (userId) => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                throw new Error("Token not found");
             }
-            acc[senderId].push(message);
-            return acc;
-          }, {});
-  
-          setGroupedMessages(grouped);
-        } else {
-          console.error(data.message || "Error fetching user messages.");
+
+            const response = await axios.get(`/messages/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Adaugă token-ul pentru autentificare
+                },
+            });
+
+            console.log(response.data); // Mesajele utilizatorului
+        } catch (error) {
+            if (error.response) {
+                // Serverul a răspuns cu un cod de eroare (4xx, 5xx)
+                console.error("Eroare la preluarea mesajelor:", error.response.data);
+            } else if (error.request) {
+                // Cererea a fost făcută, dar nu s-a primit răspuns
+                console.error("Nu s-a primit răspuns de la server:", error.request);
+            } else {
+                // Alte erori
+                console.error("Eroare:", error.message);
+            }
         }
-      } catch (error) {
-        console.error("Error fetching user messages:", error);
-      }
     };
-  
-    fetchUserMessages();
-  }, [currentUser, flatDetails]);
+
+    // Asigură-te că `currentUser.id` este valid
+    if (currentUser?.id) {
+        fetchUserMessages(currentUser.id);
+    }
+}, [currentUser, flatDetails]);
   
 
   const handleReplyChange = (senderUid, value) => {

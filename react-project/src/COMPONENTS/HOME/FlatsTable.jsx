@@ -33,7 +33,7 @@ function FlatsTable({ tableType, refetchFlag }) {
   const [flats, setFlats] = useState([]);
   const { currentUser } = useAuth();
   const [role, setRole] = useState("user");
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(currentUser.favoriteFlatList);
   const [editFlatId, setEditFlatId] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -43,6 +43,7 @@ function FlatsTable({ tableType, refetchFlag }) {
   const fetchFlats = async () => {
     let foundFlats;
     let searchFlats;
+    console.log(currentUser)
     if (tableType === "all") {
       try {
         
@@ -63,6 +64,7 @@ function FlatsTable({ tableType, refetchFlag }) {
           throw new Error("Failed to fetch flats from backend");
         }
         // const data = await response.json();
+        console.log(response.data.data);
         setFlats(response.data.data);
       } catch(error) {
         console.log("The Error is: " + error)
@@ -73,7 +75,7 @@ function FlatsTable({ tableType, refetchFlag }) {
         if (!token) {
             throw new Error("NO TOKEN FOUND");
         }
-        console.log("currentUser._id:", currentUser._id); 
+       // console.log("currentUser._id:", currentUser._id); 
         const response = await axios.get(
             `http://localhost:3000/flats/getMyFlats/${currentUser._id}`,
             {
@@ -83,7 +85,7 @@ function FlatsTable({ tableType, refetchFlag }) {
             }
         );
         
-        console.log(response)
+       // console.log(response)
 
         if (response.status !== 200) {
             throw new Error("Failed to fetch flats from backend");
@@ -119,6 +121,8 @@ function FlatsTable({ tableType, refetchFlag }) {
           if (response.status === 200 && response.data.data) {
             const favoriteFlats = response.data.data;
             setFlats(favoriteFlats);  // Actualizează starea cu apartamentele favorite
+           
+            setFavorites(favoriteFlats)
           } else {
             console.log('No favorite flats found');
           }
@@ -132,11 +136,12 @@ function FlatsTable({ tableType, refetchFlag }) {
     if (currentUser) {
       setRole(currentUser.role || "user");
     }
+  
     fetchFlats();
   }, [tableType, currentUser, role, refetchFlag]);
 
   const handleEdit = (id) => {
-    console.log("Flat ID for edit:", id); // Verifică dacă primești un ID valid
+   // console.log("Flat ID for edit:", id); // Verifică dacă primești un ID valid
     setEditFlatId(id);
     setIsEditModalOpen(true);
 };
@@ -223,6 +228,7 @@ const handleDeleteFlat = async (id) => {
 
 const handleToggleFavorite = async (flatId) => {
   try {
+    console.log("asjkdnsa")
     const token = localStorage.getItem("token"); 
       if (!token) {
           throw new Error("No token found");
@@ -240,7 +246,7 @@ const handleToggleFavorite = async (flatId) => {
       );
 
     if (response.status === 200) {
-      console.log("Favorite updated:", response.data);
+     // console.log("Favorite updated:", response.data);
       // Actualizează lista locală de favorite după ce primești răspunsul de la server
       setFavorites((prevFavorites) =>
         prevFavorites.includes(flatId)
@@ -259,14 +265,14 @@ const handleToggleFavorite = async (flatId) => {
 const handleDeleteFavorite = async (id) => {
   if (!currentUser) return;
 
-  try {
+  // try {
     const token = localStorage.getItem("token");
     if (!token) {
       throw new Error("No token found");
     }
 
-    console.log("ID to delete:", id);  // Verifică ID-ul care este trimis
-    console.log("Favorites before update:", favorites);  // Verifică favoritele înainte de update
+   // console.log("ID to delete:", id);  // Verifică ID-ul care este trimis
+   // console.log("Favorites before update:", favorites);  // Verifică favoritele înainte de update
 
     // Trimite cererea DELETE către backend pentru a elimina apartamentul din favorite
     const response = await axios.delete(`http://localhost:3000/flats/removeFavorite/${id}`, {
@@ -275,32 +281,51 @@ const handleDeleteFavorite = async (id) => {
       },
     });
 
-    console.log("Response data:", response.data);  // Verifică ce răspunde backend-ul
+   // console.log("Response data:", response.data);  // Verifică ce răspunde backend-ul
 
     if (response.status === 200) {
-      // Actualizează lista de favorite în frontend fără a aștepta un reload al paginii
-      const updatedFavorites = favorites.filter((flat) => flat?.toString() !== id?.toString());
-      console.log("Updated favorites:", updatedFavorites);
+      console.log(favorites)
+      let updatedFavorites;
+    try{
+       updatedFavorites = favorites.filter((flat) => flat?._id.toString() !== id?.toString());
+       console.log(updatedFavorites)
+       let array=[];
+       for(let arr of updatedFavorites)
+       {
+         array.push(arr._id);
+       }
+       console.log(array);
+ 
+       setFavorites(array); 
+    }
+    catch{
+      
+      updatedFavorites=favorites.filter(x=>x!==id?.toString())
+      console.log(favorites,updatedFavorites)
+      
+      setFavorites(updatedFavorites); 
+    }
+     // console.log(favorites,id);
+     // console.log("Updated favorites:", updatedFavorites);
 
       // Actualizare directă a stării pentru favorites
-      setFavorites(updatedFavorites); 
+     
 
       // Actualizează lista de flats dacă suntem pe pagina de favorite
       if (tableType === "favorites") {
-        const updatedFlats = flats.filter((flat) => flat?.id?.toString() !== id?.toString());
-        console.log("Updated flats:", updatedFlats);
+        const updatedFlats = flats.filter((flat) => flat?._id?.toString() !== id?.toString());
+       // console.log("Updated flats:", updatedFlats);
         setFlats(updatedFlats);
       }
 
-      console.log("Flat removed from favorites:", response.data);  
-      window.location.reload();
+     // console.log("Flat removed from favorites:", response.data);  
+      // window.location.reload();
     }
-  } catch (error) {
-    console.error("Error deleting favorite:", error);
-  }
+  // } catch (error) {
+  //   console.error("Error deleting favorite:", error);
+  // }
 };
 
- 
 
 
 
@@ -368,17 +393,22 @@ const handleDeleteFavorite = async (id) => {
       field: "favorite",
       headerName: "Favorite",
       renderCell: (params) => {
-        // console.log(params.row._id, currentUser._id)
+        console.log(params.row, favorites)
         const isOwner = params.row._id === currentUser._id;
 
         if (!isOwner) {
           return (
             <IconButton onClick={() => handleToggleFavorite(params.row._id)}>
-              {favorites.includes(params.row._id) ? (
+              {
+              
+              
+              favorites.includes(params.row._id) ? (
                 <Favorite style={{ color: "red" }} />
               ) : (
                 <FavoriteBorder style={{ color: "red" }} />
-              )}
+              )
+              
+              }
             </IconButton>
           );
         }
