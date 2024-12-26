@@ -163,13 +163,15 @@ useEffect(() => {
               alignItems: "center",
             }}
           >
-            <PermIdentityIcon
-            
-              sx={{
+            <PermIdentityIcon  
+            sx={{
                 fontSize: "200px",
                 color: "blueviolet",
-              }}
-            />
+            }}/>
+              
+          
+            
+             
             <Container>
               <Typography sx={{ fontSize: "18px" }}>
                 Name: {formData.fullName==""? currentUser?.fullName : formData.fullName}

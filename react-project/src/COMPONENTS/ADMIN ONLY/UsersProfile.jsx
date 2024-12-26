@@ -125,22 +125,7 @@ function UsersProfile() {
 
   const handleSaveRemoveUser = async () => {
     try {
-      // const userDocRef = doc(db, "users", userId);
-      // const batch = writeBatch(db);
-      // batch.delete(userDocRef);
-      // const flatsQuery = query(
-      //   collection(db, "flats"),
-      //   where("userId", "==", userId)
-      // );
-      // const flatsSnapshot = await getDocs(flatsQuery);
-
-      // flatsSnapshot.docs.forEach((doc) => {
-      //   batch.delete(doc.ref);
-      // });
-
-      // // Execute batch
-      // await batch.commit();
-console.log(userId)
+      console.log(userId)
       const token = localStorage.getItem("token");
       if(!token) {
         throw new Error("NO TOKEN FOUND");
