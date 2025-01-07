@@ -45,6 +45,8 @@ const Inbox = () => {
           // Grupăm mesajele după senderID
           const grouped = response.data.data.reduce((acc, message) => {
             const senderId = message.senderID._id;
+            console.log(response.data.data)
+
             if (!acc[senderId]) {
               acc[senderId] = [];
             }

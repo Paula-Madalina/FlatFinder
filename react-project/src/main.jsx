@@ -11,6 +11,7 @@ import Profile from "./COMPONENTS/PROFILE/Profile.jsx";
 import { AuthProvider } from "./CONTEXT/authContext.jsx";
 import AllUsers from "./COMPONENTS/ADMIN ONLY/AllUsers.jsx";
 import UsersProfile from "./COMPONENTS/ADMIN ONLY/UsersProfile.jsx";
+import ResetPassword from "./COMPONENTS/AUTH/ResetPassword.jsx";
 import "./COMPONENTS/AUTH/Auth.css";
 
 const router = createBrowserRouter([
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
     path: "/users-profile/:userId",
     element: <UsersProfile></UsersProfile>,
   },
+  {
+    path:"/resetPassword/:token",
+    element: <ResetPassword></ResetPassword>
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(

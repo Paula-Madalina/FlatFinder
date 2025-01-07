@@ -33,7 +33,7 @@ function FlatsTable({ tableType, refetchFlag }) {
   const [flats, setFlats] = useState([]);
   const { currentUser } = useAuth();
   const [role, setRole] = useState("user");
-  const [favorites, setFavorites] = useState(currentUser.favoriteFlatList);
+  const [favorites, setFavorites] = useState(currentUser?.favoriteFlatList || []);
   const [editFlatId, setEditFlatId] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -63,9 +63,38 @@ function FlatsTable({ tableType, refetchFlag }) {
         if (response.status !== 200) {
           throw new Error("Failed to fetch flats from backend");
         }
+
+        const response2 = await axios.get(`http://localhost:3000/flats/getFavoriteFlats/${currentUser._id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         // const data = await response.json();
         console.log(response.data.data);
+        console.log(response2.data.data);
+
         setFlats(response.data.data);
+        let updatedFavorites;
+        try{
+          console.log(favorites)
+          updatedFavorites = favorites.filter((flat) => flat?._id.toString() !== currentUser._id?.toString());
+          console.log(updatedFavorites)
+          let array=[];
+          for(let arr of updatedFavorites)
+          {
+            array.push(arr._id);
+          }
+          console.log(array);
+    
+          setFavorites(array); 
+       }
+       catch{
+         
+         updatedFavorites=favorites.filter(x=>x!==currentUser._id?.toString())
+         console.log(favorites,updatedFavorites)
+         
+         setFavorites(updatedFavorites); 
+       }
       } catch(error) {
         console.log("The Error is: " + error)
       }
@@ -90,7 +119,7 @@ function FlatsTable({ tableType, refetchFlag }) {
         if (response.status !== 200) {
             throw new Error("Failed to fetch flats from backend");
         }
-        
+
         setFlats(response.data.data);  // Salvează apartamentele
     } catch (error) {
         if(error.response.data.message == 'No flats found for this user') {
