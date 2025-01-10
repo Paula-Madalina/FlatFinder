@@ -11,12 +11,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useAuth } from "../../CONTEXT/authContext";
-import { doSignOut } from "../../auth";
 import Header from "../HEADER/Header";
 import PermIdentityIcon from "@mui/icons-material/PermIdentity";
-import { query, collection, where, getDocs, doc, writeBatch,setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { db } from "../../firebase";
 import { ToastContainer } from "react-toastify";
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 import './Profile.css';
@@ -85,9 +82,8 @@ useEffect(() => {
 
     if (response.status === 200) {
       console.log("Profile updated successfully");
-     // await refreshUser(); 
       window.location.reload();
-      handleClose(); // Închide dialogul
+      handleClose(); 
     } else {
       console.error("Failed to update profile");
     }
@@ -115,7 +111,7 @@ useEffect(() => {
         `http://localhost:3000/users/deleteUser/${currentUser._id}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Trimite token-ul JWT în header
+            Authorization: `Bearer ${token}`, 
           },
         }
       );

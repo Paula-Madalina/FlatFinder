@@ -48,7 +48,6 @@ function UsersProfile() {
             },
           });
           console.log("User data:", response.data);
-          // Apel pentru apartamentele utilizatorului
       const flatsResponse = await axios.get(`http://localhost:3000/flats/flatByUserId/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -57,12 +56,11 @@ function UsersProfile() {
 
       console.log("User flats:", flatsResponse.data);
 
- // Actualizează userData cu informațiile despre utilizator și apartamente
       setUserData({
         ...response.data,
         flats: flatsResponse.data.map((flat, index) => ({
           ...flat,
-          id: index + 1, // Adaugă un id unic pentru DataGrid
+          id: index + 1, 
         })),
       });
         } catch (error) {
@@ -84,12 +82,6 @@ function UsersProfile() {
 
   const handleSave = async () => {
     try {
-      // const userDocRef = doc(db, "users", userId);
-      // await updateDoc(userDocRef, { role: "admin" });
-      // setUserData((prevState) => ({ ...prevState, role: "admin" }));
-      // setSnackbarMessage("User role updated to admin");
-      // setOpenSnackbar(true);
-      // handleClose();
       const token = localStorage.getItem("token");
       if(!token) {
         throw new Error("NO TOKEN FOUND");

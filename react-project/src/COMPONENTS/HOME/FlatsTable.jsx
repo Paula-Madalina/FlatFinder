@@ -1,16 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-  getDoc,
-  documentId,
-  deleteDoc,
-} from "firebase/firestore";
-import { db } from "../../firebase";
 import { useAuth } from "../../CONTEXT/authContext";
 import { DataGrid } from "@mui/x-data-grid";
 import { IconButton } from "@mui/material";
@@ -329,14 +317,6 @@ const handleDeleteFavorite = async (id) => {
   
 };
 
-
-
-
-
-
-
-  
-
   const columns = [
     {
       field: "city",
@@ -471,7 +451,7 @@ const handleDeleteFavorite = async (id) => {
         }}
         autoHeight
         autosizeOnMount
-        rows={flats && Array.isArray(flats) ? flats.map(flat => ({ ...flat, id: flat._id })) : []} // Verificăm dacă flats este un array valid
+        rows={flats && Array.isArray(flats) ? flats.map(flat => ({ ...flat, id: flat._id })) : []} 
         columns={columns}
         pageSize={5}
         getRowId={(row) => row._id} 

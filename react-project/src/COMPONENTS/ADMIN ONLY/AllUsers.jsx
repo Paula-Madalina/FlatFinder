@@ -22,17 +22,14 @@ function AllUsers() {
                     throw new Error("NO TOKEN FOUND");
                 }
     
-                // Obține utilizatorii
                 const response = await axios.get('http://localhost:3000/users', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
     
-                // Adaugă numărul de apartamente pentru fiecare utilizator
                 const usersWithFlatsCount = await Promise.all(
                     response.data.map(async (user) => {
-                        // Cerere pentru a obține numărul de apartamente
                         const flatsCountResponse = await axios.get(`http://localhost:3000/flats/flatsCount/${user._id}`, {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -41,12 +38,12 @@ function AllUsers() {
     
                         return {
                             ...user,
-                            flatsCount: flatsCountResponse.data.count,  // Adăugăm numărul de apartamente
+                            flatsCount: flatsCountResponse.data.count,  
                         };
                     })
                 );
     
-                setUsers(usersWithFlatsCount); // Salvează utilizatorii cu numărul de apartamente
+                setUsers(usersWithFlatsCount); 
             } catch (error) {
                 console.error('Error fetching users:', error);
             }
@@ -91,7 +88,7 @@ function AllUsers() {
                     <h1 className='hero__table__title'>ALL USERS</h1>
 
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '0 10px' }}>
-        <Paper sx={{ width: '100%', maxWidth: '700px', overflowX: 'auto' }}> {/* Ajustează maxWidth */}
+        <Paper sx={{ width: '100%', maxWidth: '700px', overflowX: 'auto' }}> 
             <DataGrid
                 rows={users}
                 columns={columns}

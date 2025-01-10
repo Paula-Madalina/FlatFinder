@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState, createContext } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -12,7 +11,6 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userLoggedIn, setUserLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  // const navigate = useNavigate(); 
 
 
  useEffect(() => {
@@ -48,7 +46,6 @@ async function verifyUser(token) {
       localStorage.removeItem('token'); 
       setUserLoggedIn(false);
       setCurrentUser(null);
-      // navigate('/login');
     }
     console.error("User verification failed", error);
   }

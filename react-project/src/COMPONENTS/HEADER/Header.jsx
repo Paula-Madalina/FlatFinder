@@ -22,7 +22,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 
 
-Modal.setAppElement("#root"); // Set the root element for accessibility
+Modal.setAppElement("#root"); 
 
 export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -221,10 +221,7 @@ useEffect(() => {
           <MenuItem
             sx={{ fontFamily: "inherit", fontSize: "18px" }}
             onClick={() => {
-              // Șterge tokenul din localStorage
               localStorage.removeItem("token");
-              
-              // Face logout-ul și redirecționează utilizatorul către pagina de login
               doSignOut().then(() => {
                 navigate("/login");
               });

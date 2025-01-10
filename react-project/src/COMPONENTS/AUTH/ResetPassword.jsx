@@ -1,29 +1,28 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom'; // Folosește useNavigate în loc de useHistory
-import './ResetPassword.css'; // Asigură-te că importi fișierul CSS
+import { useParams, useNavigate } from 'react-router-dom'; 
+import './ResetPassword.css'; 
 import { ToastContainer } from "react-toastify";
 import showToastr from "../../SERVICES/toaster-service";
 
 const ResetPassword = () => {
-  const { token } = useParams();  // Preia token-ul din URL
+  const { token } = useParams();  
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const navigate = useNavigate(); // Folosește useNavigate
-
+  const navigate = useNavigate(); 
   const handleResetPassword = async (event) => {
         event.preventDefault();
       
-        const token = window.location.pathname.split('/')[2]; // Preia token-ul din URL
+        const token = window.location.pathname.split('/')[2]; 
       
         if (newPassword && confirmPassword) {
           try {
             const response = await axios.post(`http://localhost:3000/users/resetPassword/${token}`, {
               password: newPassword,
             });
-            console.log(response.data); // Răspunsul de la server
+            console.log(response.data); 
             showToastr("success", "Password reset successfully.");
             setTimeout(() => {
                 navigate("/login");

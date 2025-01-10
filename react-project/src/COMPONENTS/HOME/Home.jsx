@@ -18,9 +18,9 @@ function Home() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // Verifică dacă există un token
+    const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/login"); // Redirecționează pe login dacă tokenul lipsește
+      navigate("/login"); 
     }
   }, []);
 

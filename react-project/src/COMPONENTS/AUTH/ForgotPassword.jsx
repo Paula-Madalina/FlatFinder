@@ -19,10 +19,8 @@ const ForgotPassword = () => {
     event.preventDefault(); 
 
     if (email.trim()) {
-      console.log('Email:', email); // Asigură-te că emailul este trimis corect
-
+      console.log('Email:', email); 
       try {
-        // Trimiterea cererii către backend pentru resetarea parolei
         const response = await axios.post("http://localhost:3000/users/forgotPassword", { email });
         console.log('Response:', response);
 
@@ -31,7 +29,6 @@ const ForgotPassword = () => {
           navigate(`/resetPassword/${response.data.token}`);
         }, 2000);
       } catch (error) {
-        // Erorile de la server
         showToastr("error", error.response?.data?.error || "An error occurred.");
       }
     } else {

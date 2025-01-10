@@ -15,9 +15,7 @@ import showToastr from "../../SERVICES/toaster-service";
 import { ToastContainer } from "react-toastify";
 import { validationRules } from "../../VALIDATIONS/validation";
 import { useAuth } from "../../CONTEXT/authContext";
-import { doSignInWithEmailAndPassword } from "../../auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase";
+
 import axios from "axios";
 
 function Login() {
@@ -28,12 +26,6 @@ function Login() {
     password: "",
   });
   const [isSigningIn, setIsSigningIn] = useState(false);
-
-  // useEffect(() => {
-  //   if (currentUser) {
-  //     navigate("/FirstView");
-  //   }
-  // }, [currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,22 +60,20 @@ function Login() {
           password: formData.password,
         };
   
-        // Trimitere cerere POST pentru login
         const response = await axios.post(
           "http://localhost:3000/auth/login",
           userLoginDetails
         );
   
-        // Log the entire response to check the structure
         console.log(response.data);
   
         const token = response.data.token;
-        const user = response.data.user; // Ensure the user data is present
+        const user = response.data.user; 
         
         if (user) {
           localStorage.setItem("token", token);
           setCurrentUser(user); 
-          console.log(user); // Log the user object to check if it's correct
+          console.log(user); 
           showToastr("success", "Login successful!");
   
           setTimeout(() => {

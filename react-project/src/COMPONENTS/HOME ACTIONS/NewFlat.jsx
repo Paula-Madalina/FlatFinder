@@ -14,8 +14,6 @@ import {
 import { ToastContainer } from "react-toastify";
 import showToastr from "../../SERVICES/toaster-service";
 import { useAuth } from "../../CONTEXT/authContext";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "../../firebase"; 
 import "../HOME/Home.css";
 import axios from "axios";
 
@@ -51,8 +49,8 @@ export default function NewFlat({ setRefetchFlag }) {
     if (currentUser) {
       const flatData = {
         ...formJson,
-        userUid: currentUser._id, // Save the currentUser's uid
-        createdAt: new Date(), // Add a timestamp
+        userUid: currentUser._id, 
+        createdAt: new Date(),
       };
       console.log(currentUser);
       console.log(flatData);
@@ -64,10 +62,9 @@ export default function NewFlat({ setRefetchFlag }) {
         }
         console.log(token);
   
-        // Correct the axios request
         const response = await axios.post(
           `http://localhost:3000/flats/register`,
-          flatData, // Send flatData directly here
+          flatData, 
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -88,7 +85,6 @@ export default function NewFlat({ setRefetchFlag }) {
   
         setRefetchFlag(true);
         handleClose();
-        // window.location.reload();
       } catch (error) {
         showToastr("error", `Error adding flat: ${error}`);
       }
@@ -119,7 +115,7 @@ export default function NewFlat({ setRefetchFlag }) {
         PaperProps={{
           component: "form",
           onSubmit: handleSubmit,
-          sx: { backgroundColor: "#f2eee9", borderRadius: "30px" }, // modal background
+          sx: { backgroundColor: "#f2eee9", borderRadius: "30px" },
         }}
         sx={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
       >

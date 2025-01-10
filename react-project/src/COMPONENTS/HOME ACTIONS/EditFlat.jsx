@@ -11,8 +11,6 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../../firebase";
 import axios from "axios";
 
 
@@ -28,7 +26,6 @@ const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
             throw new Error("No token found");
           }
 
-          // Cerere către backend pentru a prelua datele flatului
           const response = await axios.get(
             `http://localhost:3000/flats/getByID/${flatId}`,
             {
@@ -39,7 +36,7 @@ const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
           );
 
           if (response.status === 200) {
-            setFlatData(response.data); // Setăm datele flatului
+            setFlatData(response.data);
           }
         } catch (error) {
           console.error("Error fetching flat details:", error);
@@ -63,7 +60,6 @@ const EditFlat = ({ open, onClose, flatId, onUpdate }) => {
         throw new Error("No token found");
       }
 
-      // Cerere PATCH pentru actualizarea flatului
       const response = await axios.patch(
         `http://localhost:3000/flats/updateFlat/${flatId}`,
         flatData,

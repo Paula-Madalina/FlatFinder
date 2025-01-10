@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../CONTEXT/authContext";
-import axios from "axios"; // Adaugă axios
+import axios from "axios"; 
 import {
   Typography,
   Card,
@@ -19,10 +19,10 @@ import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import { useNavigate } from "react-router-dom";
 
 const Inbox = () => {
-  const [groupedMessages, setGroupedMessages] = useState({}); // State pentru mesajele grupate
-  const [reply, setReply] = useState({}); // State pentru reply
-  const [showInput, setShowInput] = useState({}); // State pentru a controla vizibilitatea input-ului
-  const { currentUser } = useAuth(); // Obținem utilizatorul curent
+  const [groupedMessages, setGroupedMessages] = useState({}); 
+  const [reply, setReply] = useState({}); 
+  const [showInput, setShowInput] = useState({}); 
+  const { currentUser } = useAuth(); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,14 +35,13 @@ const Inbox = () => {
   
         const response = await axios.get('http://localhost:3000/messages/user', {
           headers: {
-            Authorization: `Bearer ${token}`, // Adaugă token-ul pentru autentificare
+            Authorization: `Bearer ${token}`, 
           },
         });
   
         if (response.status === 404) {
           console.log("No messages found");
         } else if (response.data?.data) {
-          // Grupăm mesajele după senderID
           const grouped = response.data.data.reduce((acc, message) => {
             const senderId = message.senderID._id;
             console.log(response.data.data)
@@ -60,21 +59,21 @@ const Inbox = () => {
             });
             return acc;
           }, {});
-          setGroupedMessages(grouped); // Setează mesajele grupate în state
+          setGroupedMessages(grouped); 
         } else {
           console.error("No data received from API.");
         }
       } catch (error) {
         if (error.response && error.response.status === 404) {
-          console.log("No messages found"); // Mesaj personalizat pentru 404
+          console.log("No messages found"); 
         } else {
-          console.error("Error fetching messages:", error); // Mesaj generic pentru alte erori
+          console.error("Error fetching messages:", error); 
         }
       }
     };
   
     if (currentUser) {
-      fetchUserMessages(); // Fetch mesajele la montarea componentei
+      fetchUserMessages(); 
     }
   }, [currentUser]);
   
@@ -92,31 +91,30 @@ const Inbox = () => {
     }
     if (!currentUser || !reply[senderUid]) return;
 
-    // Găsește primul mesaj din grupul respectiv pentru a prelua flatID
-    const message = groupedMessages[senderUid]?.[0]; // Preia primul mesaj din grupul expeditorului
-    const flatID = message?.flatId; // Obține flatID din mesajul respectiv
+    const message = groupedMessages[senderUid]?.[0]; 
+    const flatID = message?.flatId; 
 
     if (!flatID || !senderUid || !reply[senderUid]) {
         console.error("Missing required fields: flatID, receiverID, or content.");
         showToastr("error", "Please fill all required fields.");
-        return; // Ieși din funcție dacă lipsesc câmpuri
+        return; 
     }
 
     const messageDetails = {
-        content: reply[senderUid], // Conținutul răspunsului
-        senderID: currentUser.id, // ID-ul utilizatorului curent (expeditorul răspunsului)
-        receiverID: senderUid, // ID-ul expeditorului mesajului inițial (cel care a primit răspunsul)
-        flatID: flatID, // Aici trebuie să fie un ID valid
+        content: reply[senderUid], 
+        senderID: currentUser.id,
+        receiverID: senderUid, 
+        flatID: flatID, 
     };
 
     try {
         const response = await axios.post(
-            `http://localhost:3000/messages/reply/${senderUid}`, // Noua rută de răspuns
-            messageDetails, // Detaliile răspunsului
+            `http://localhost:3000/messages/reply/${senderUid}`, 
+            messageDetails, 
             {
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`, // Token-ul pentru autentificare
+                    Authorization: `Bearer ${token}`, 
                 },
             }
         );
