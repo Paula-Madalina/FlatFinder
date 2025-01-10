@@ -32,28 +32,26 @@ function ViewFlat() {
           throw new Error("No token found");
         }
   
-        // Cerere către backend pentru datele flat-ului
         const flatResponse = await axios.get(
-          `http://localhost:3000/flats/getByID/${flatId}`, // Ruta backend
+          `http://localhost:3000/flats/getByID/${flatId}`, 
           {
             headers: {
-              Authorization: `Bearer ${token}`, // Token pentru autentificare
+              Authorization: `Bearer ${token}`, 
             },
           }
         );
   
-        setFlat(flatResponse.data); // Setăm datele flatului
+        setFlat(flatResponse.data); 
   
-        // Dacă dorești să preiei date despre proprietar, modifică modelul pentru flat să includă un `populate` pe `ownerID`.
         const ownerResponse = await axios.get(
-          `http://localhost:3000/users/${flatResponse.data.ownerID}`, // Exemplu pentru ruta utilizatorilor
+          `http://localhost:3000/users/${flatResponse.data.ownerID}`, 
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setOwner(ownerResponse.data); // Setăm datele utilizatorului
+        setOwner(ownerResponse.data); 
       } catch (error) {
         console.error("Error fetching flat or owner:", error);
       }
@@ -73,13 +71,6 @@ function ViewFlat() {
     setEditFlatId(null);
   };
 
-  // const handleUpdateFlat = async () => {
-    // const flatDoc = await getDoc(doc(db, "flats", flatId));
-    // if (flatDoc.exists()) {
-    //   setFlat(flatDoc.data()); // Refresh flat details
-    // }
-    // handleCloseEditModal();
-
     const handleUpdateFlat = async (updatedFlat) => {
       try {
           const token = localStorage.getItem("token");
@@ -95,7 +86,7 @@ function ViewFlat() {
           );
   
           if (response.status === 200) {
-              setFlat(response.data); // Actualizează datele flatului în UI
+              setFlat(response.data); 
               handleCloseEditModal();
           }
       } catch (error) {
@@ -112,7 +103,7 @@ function ViewFlat() {
         return;
     }
 
-    const receiverID = flat.ownerID; // Presupunând că receiverID este proprietarul flat-ului
+    const receiverID = flat.ownerID; 
     if (!receiverID) {
         console.error("Receiver ID not found");
         showToastr("error", "Receiver ID is missing!");
@@ -121,37 +112,34 @@ function ViewFlat() {
 
     const newMessage = {
         content: message,
-        senderID: currentUser._id,  // ID-ul utilizatorului logat
+        senderID: currentUser._id,  
         senderName: currentUser.fullName,
         senderEmail: currentUser.email,
         created: new Date(),
-        flatID: flatId,  // ID-ul platoului
-        receiverID: receiverID, // ID-ul utilizatorului destinatar
+        flatID: flatId, 
+        receiverID: receiverID,
     };
 
     if (message !== "") {
         try {
-            // Trimite cererea POST către backend pentru a salva mesajul în MongoDB
             const token = localStorage.getItem("token");
             const response = await axios.post(
                 `http://localhost:3000/messages/addMessage/${flatId}`,
                 newMessage,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`,  // Auth token pentru a valida utilizatorul
+                        Authorization: `Bearer ${token}`, 
                     },
                 }
             );
 
-            console.log(response.data); // Răspunsul va conține acum obiectul complet cu mesajul
+            console.log(response.data); 
 
-            // Dacă cererea este cu succes
             if (response.status === 200) {
-                setMessage("");  // Resetează câmpul de mesaj
+                setMessage(""); 
                 showToastr("success", "Message sent successfully!");
 
-                // Afișează contentul mesajului
-                console.log("Message Content:", response.data.data.content); // Afișează contentul
+                console.log("Message Content:", response.data.data.content); 
             }
         } catch (error) {
             console.error("Error sending message:", error);

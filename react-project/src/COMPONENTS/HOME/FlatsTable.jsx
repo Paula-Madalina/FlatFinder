@@ -51,11 +51,12 @@ function FlatsTable({ tableType, refetchFlag }) {
         if(!token) {
           throw new Error("NO TOKEN FOUND")
         }
+
         const response = await axios.get(
           'http://localhost:3000/flats/getAllFlats',
           {
             headers: {
-              Authorization: `Bearer ${token}`, // Trimite token-ul JWT în header
+              Authorization: `Bearer ${token}`, 
             },
           }
         );
@@ -69,7 +70,6 @@ function FlatsTable({ tableType, refetchFlag }) {
             Authorization: `Bearer ${token}`,
           },
         });
-        // const data = await response.json();
         console.log(response.data.data);
         console.log(response2.data.data);
 
@@ -104,7 +104,6 @@ function FlatsTable({ tableType, refetchFlag }) {
         if (!token) {
             throw new Error("NO TOKEN FOUND");
         }
-       // console.log("currentUser._id:", currentUser._id); 
         const response = await axios.get(
             `http://localhost:3000/flats/getMyFlats/${currentUser._id}`,
             {
@@ -114,13 +113,12 @@ function FlatsTable({ tableType, refetchFlag }) {
             }
         );
         
-       // console.log(response)
 
         if (response.status !== 200) {
             throw new Error("Failed to fetch flats from backend");
         }
 
-        setFlats(response.data.data);  // Salvează apartamentele
+        setFlats(response.data.data);  
     } catch (error) {
         if(error.response.data.message == 'No flats found for this user') {
            setFlats([]) ;
@@ -128,11 +126,6 @@ function FlatsTable({ tableType, refetchFlag }) {
     }
 
       
-      // searchFlats = query(
-      //   collection(db, "flats"),
-      //   where("userUid", "==", currentUser.uid)
-      // );
-      // foundFlats = await getDocs(searchFlats);
   } else if (tableType === "favorites" && currentUser) {
         try {
           const token = localStorage.getItem("token");
@@ -140,7 +133,6 @@ function FlatsTable({ tableType, refetchFlag }) {
             throw new Error("NO TOKEN FOUND");
           }
           
-          // Apelăm endpoint-ul pentru a obține doar apartamentele favorite
           const response = await axios.get(`http://localhost:3000/flats/getFavoriteFlats/${currentUser._id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -149,7 +141,7 @@ function FlatsTable({ tableType, refetchFlag }) {
     
           if (response.status === 200 && response.data.data) {
             const favoriteFlats = response.data.data;
-            setFlats(favoriteFlats);  // Actualizează starea cu apartamentele favorite
+            setFlats(favoriteFlats);  
            
             setFavorites(favoriteFlats)
           } else {
@@ -170,7 +162,6 @@ function FlatsTable({ tableType, refetchFlag }) {
   }, [tableType, currentUser, role, refetchFlag]);
 
   const handleEdit = (id) => {
-   // console.log("Flat ID for edit:", id); // Verifică dacă primești un ID valid
     setEditFlatId(id);
     setIsEditModalOpen(true);
 };
@@ -190,11 +181,11 @@ function FlatsTable({ tableType, refetchFlag }) {
         }
 
         const response = await axios.patch(
-            `http://localhost:3000/flats/updateFlat/${updatedFlat._id}`,  // URL-ul backend-ului pentru actualizare
-            updatedFlat,  // Datele flatului actualizate
+            `http://localhost:3000/flats/updateFlat/${updatedFlat._id}`, 
+            updatedFlat,  
             {
                 headers: {
-                    Authorization: `Bearer ${token}`,  // Trimite token-ul pentru autentificare
+                    Authorization: `Bearer ${token}`,  
                 },
             }
         );
@@ -218,23 +209,23 @@ function FlatsTable({ tableType, refetchFlag }) {
 
 const handleDeleteFlat = async (id) => {
   try {
-      const token = localStorage.getItem("token"); // Asigură-te că ai un token valid
+      const token = localStorage.getItem("token");
       if (!token) {
           throw new Error("No token found");
       }
 
       const response = await axios.delete(
-          `http://localhost:3000/flats/deleteFlat/${id}`, // Ruta backend pentru ștergere
+          `http://localhost:3000/flats/deleteFlat/${id}`,
           {
               headers: {
-                  Authorization: `Bearer ${token}`, // Trimite token-ul pentru autentificare
+                  Authorization: `Bearer ${token}`, 
               },
           }
       );
 
       if (response.status === 200) {
-          setFlats(flats.filter((flat) => flat._id !== id)); // Actualizează lista de flats în UI
-          handleCloseDeleteModal(); // Închide modalul de confirmare
+          setFlats(flats.filter((flat) => flat._id !== id)); 
+          handleCloseDeleteModal(); 
           console.log("Flat deleted successfully");
       } else {
           console.log("Failed to delete flat:", response.data.message);
@@ -257,7 +248,6 @@ const handleDeleteFlat = async (id) => {
 
 const handleToggleFavorite = async (flatId) => {
   try {
-    console.log("asjkdnsa")
     const token = localStorage.getItem("token"); 
       if (!token) {
           throw new Error("No token found");
@@ -275,12 +265,11 @@ const handleToggleFavorite = async (flatId) => {
       );
 
     if (response.status === 200) {
-     // console.log("Favorite updated:", response.data);
-      // Actualizează lista locală de favorite după ce primești răspunsul de la server
+     
       setFavorites((prevFavorites) =>
         prevFavorites.includes(flatId)
-          ? prevFavorites.filter((id) => id !== flatId) // Elimină dacă există
-          : [...prevFavorites, flatId] // Adaugă dacă nu există
+          ? prevFavorites.filter((id) => id !== flatId) 
+          : [...prevFavorites, flatId] 
       );
     } else {
       console.error("Error updating favorite:", response.data.error);
@@ -294,23 +283,18 @@ const handleToggleFavorite = async (flatId) => {
 const handleDeleteFavorite = async (id) => {
   if (!currentUser) return;
 
-  // try {
     const token = localStorage.getItem("token");
     if (!token) {
       throw new Error("No token found");
     }
 
-   // console.log("ID to delete:", id);  // Verifică ID-ul care este trimis
-   // console.log("Favorites before update:", favorites);  // Verifică favoritele înainte de update
-
-    // Trimite cererea DELETE către backend pentru a elimina apartamentul din favorite
+   
     const response = await axios.delete(`http://localhost:3000/flats/removeFavorite/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-   // console.log("Response data:", response.data);  // Verifică ce răspunde backend-ul
 
     if (response.status === 200) {
       console.log(favorites)
@@ -334,25 +318,15 @@ const handleDeleteFavorite = async (id) => {
       
       setFavorites(updatedFavorites); 
     }
-     // console.log(favorites,id);
-     // console.log("Updated favorites:", updatedFavorites);
-
-      // Actualizare directă a stării pentru favorites
-     
-
-      // Actualizează lista de flats dacă suntem pe pagina de favorite
+    
       if (tableType === "favorites") {
         const updatedFlats = flats.filter((flat) => flat?._id?.toString() !== id?.toString());
-       // console.log("Updated flats:", updatedFlats);
         setFlats(updatedFlats);
       }
 
-     // console.log("Flat removed from favorites:", response.data);  
-      // window.location.reload();
+    
     }
-  // } catch (error) {
-  //   console.error("Error deleting favorite:", error);
-  // }
+  
 };
 
 
@@ -528,7 +502,7 @@ const handleDeleteFavorite = async (id) => {
         PaperProps={{
           component: "form",
           onSubmit: handleDeleteFlat,
-          sx: { backgroundColor: "#f2eee9", borderRadius: "30px" }, // modal background
+          sx: { backgroundColor: "#f2eee9", borderRadius: "30px" },
         }}
         sx={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
       >
